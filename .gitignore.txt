@@ -1,0 +1,9 @@
+*.pdb
+*.dll
+.vs/
+.git/
+Intermediate/
+Binaries/
+DerivedDataCache/
+Saved/
+Plugins/MultiplayerSessions/Binaries/
