@@ -3,6 +3,11 @@
 #include "GameFramework/PlayerStart.h"
 #include "ShoqianPlayerState.h"
 
+namespace MatchState
+{
+	const FName CoolDown = FName("Cooldown");
+}
+
 AShotiaGameMode::AShotiaGameMode()
 {
 	//Wait response for passing to InProgress state from WaitingToStart
@@ -36,12 +41,21 @@ void AShotiaGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//Set match states by transition with time
 	if (GetMatchState() == MatchState::WaitingToStart)
 	{
+		//GetTimeSeconds returns the total seconds since the world has been created and same for all clients
 		CountDownTime = WarmUpTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 
 		if (CountDownTime <= 0.f)
 			StartMatch();
+	}
+	else if (GetMatchState() == MatchState::InProgress)
+	{
+		CountDownTime = WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+
+		if (CountDownTime <= 0.f)
+			SetMatchState(MatchState::CoolDown);
 	}
 }
 

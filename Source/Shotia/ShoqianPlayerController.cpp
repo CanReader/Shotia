@@ -131,7 +131,7 @@ void AShoqianPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ServerCheckMatchState();
+	//ServerCheckMatchState();
 
 	HUD = Cast<AShoqianHUD>(GetHUD());
 
@@ -190,10 +190,11 @@ void AShoqianPlayerController::ReceivedPlayer()
 	}
 }
 
-void AShoqianPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float StartingTime)
+void AShoqianPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime)
 {
 	WarmupTime = Warmup;
 	MatchTime = Match;
+	CooldownTime = Cooldown;
 	LevelStartingTime = StartingTime;
 	MatchState = StateOfMatch;
 	OnMatchStateSet(MatchState);
@@ -210,9 +211,10 @@ void AShoqianPlayerController::ServerCheckMatchState_Implementation()
 	{
 		WarmupTime = gm->WarmUpTime;
 		MatchTime = gm->MatchTime;
+		CooldownTime = gm->CountDownTime;
 		LevelStartingTime = gm->LevelStartingTime;
 		MatchState = gm->GetMatchState();
-		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime,CooldownTime, LevelStartingTime);
 	}
 }
 
@@ -244,7 +246,7 @@ void AShoqianPlayerController::SetHUDTime()
 
 	if (CountDownInt != SecsLeft)
 	{
-		if (MatchState == "WaitingToStart")
+		if (MatchState == "WaitingToStart" || MatchState == "CoolDown")
 		{
 			SetHUDWarmupCountdown(SecsLeft);
 		}
@@ -260,9 +262,9 @@ void AShoqianPlayerController::SetHUDTime()
 void AShoqianPlayerController::OnRep_MatchState()
 {
 	if (MatchState == "InProgress")
-	{
 		OnMatchHasStarted();
-	}
+	else if (MatchState == "Cooldown")
+		OnCooldownHasStarted();
 }
 
 void AShoqianPlayerController::OnMatchStateSet(FName NewMatchState)
@@ -270,10 +272,9 @@ void AShoqianPlayerController::OnMatchStateSet(FName NewMatchState)
 	MatchState = NewMatchState;
 
 	if (MatchState == "InProgress")
-	{
 		OnMatchHasStarted();
-	}
-
+	else if (MatchState == "Cooldown")
+		OnCooldownHasStarted();
 }
 
 void AShoqianPlayerController::OnMatchHasStarted()
@@ -286,5 +287,18 @@ void AShoqianPlayerController::OnMatchHasStarted()
 
 		if (HUD->WarmWidget)
 			HUD->WarmWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void AShoqianPlayerController::OnCooldownHasStarted()
+{
+	HUD = HUD == nullptr ? Cast<AShoqianHUD>(GetHUD()) : HUD;
+
+	if (HUD)
+	{
+		HUD->Overlay->SetVisibility(ESlateVisibility::Hidden);
+
+		if (HUD->WarmWidget)
+			HUD->WarmWidget->SetVisibility(ESlateVisibility::Visible);
 	}
 }

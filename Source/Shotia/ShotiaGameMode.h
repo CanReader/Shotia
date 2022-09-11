@@ -6,6 +6,11 @@
 #include "CharacterController.h"
 #include "ShotiaGameMode.generated.h"
 
+namespace MatchState
+{
+	extern SHOTIA_API const FName CoolDown; // The match duration has been reached. Display winner and begin cooldown timer
+}
+
 UCLASS()
 class SHOTIA_API AShotiaGameMode : public AGameMode
 {
@@ -24,6 +29,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	float WarmUpTime = 10.f;
+	
+	UPROPERTY(EditDefaultsOnly)
+	float CountDownTime = 0.f;
 
 	float LevelStartingTime = 0.f;
 
@@ -32,7 +40,4 @@ protected:
 
 	virtual void OnMatchStateSet() override;
 
-private:
-	UPROPERTY(EditDefaultsOnly)
-		float CountDownTime = 0.f;
 };
