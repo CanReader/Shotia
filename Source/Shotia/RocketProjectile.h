@@ -15,6 +15,10 @@ class SHOTIA_API ARocketProjectile : public AProjectileBullet
 	GENERATED_BODY()
 public:
 	ARocketProjectile();
+	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailSystem;
 
 protected:
 	virtual void OnHit(UPrimitiveComponent* HitComp,

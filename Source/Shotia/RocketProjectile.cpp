@@ -1,5 +1,6 @@
 #include "Shotia/RocketProjectile.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
 
 ARocketProjectile::ARocketProjectile()
 {
@@ -7,6 +8,14 @@ ARocketProjectile::ARocketProjectile()
 	RocketMesh->SetupAttachment(RootComponent);
 	RocketMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+}
+
+void ARocketProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (TrailSystem)
+		UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem,GetRootComponent(),FName(),GetActorLocation(),GetActorRotation(),EAttachLocation::KeepWorldPosition,false);
 }
 
 void ARocketProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)

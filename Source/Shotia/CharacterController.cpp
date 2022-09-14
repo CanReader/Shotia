@@ -227,6 +227,8 @@ void ACharacterController::MulticastEliminate_Implementation()
 	if (PlayerController)
 		PlayerController->SetHUDAmmo(0);
 
+	Overhead->SetVisibility(false);
+
 	IsEliminated = true;
 	PlayElimMontage();
 
@@ -578,6 +580,8 @@ void ACharacterController::ElimTimerFinished()
 
 	PlayerController->SetHUDHealth(MaxHealth,MaxHealth);
 	UpdateHUD();
+
+	Overhead->SetVisibility(true);
 
 	}
 }

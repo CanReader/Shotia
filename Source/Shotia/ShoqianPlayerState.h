@@ -14,6 +14,7 @@ public:
     virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
     virtual void OnRep_Score() override;
+
     UFUNCTION()
     virtual void OnRep_DeathCount();
 
