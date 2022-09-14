@@ -1,7 +1,9 @@
 #include "Shotia/ShoqianPlayerController.h"
 #include "CharacterController.h"
 #include "ShotiaGameMode.h"
+#include "CombatComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "ShotiaGameState.h"
 
 void AShoqianPlayerController::SetHUDHealth(float Health, float MaxHealth)
 {
@@ -74,10 +76,16 @@ void AShoqianPlayerController::SetHUDMatchCountDown(float CountDownTime)
 
 	if (HUD != nullptr && HUD->Overlay != nullptr && HUD->Overlay->MatchCountText != nullptr)
 	{
+		if (CountDownTime <= 0.f)
+		{
+			CountDownTime = 0;
+		}
+
 		int32 Min = FMath::FloorToInt(CountDownTime/60);
 		int32 Secs = CountDownTime - Min * 60;
 
 		FString str = FString::Printf(TEXT("%02d:%02d"),Min,Secs);
+
 		HUD->Overlay->MatchCountText->SetText(FText::FromString(str));
 	}
 }
@@ -88,10 +96,17 @@ void AShoqianPlayerController::SetHUDWarmupCountdown(float CountDownTime)
 
 	if (HUD != nullptr && HUD->WarmWidget != nullptr && HUD->WarmWidget->WarmupTime != nullptr)
 	{
+
+		if (CountDownTime <= 0 || CountDownTime > 100)
+		{
+			HUD->WarmWidget->WarmupTime->SetText(FText::FromString(" "));
+			return;
+		}
+
 		int32 Min = FMath::FloorToInt(CountDownTime / 60);
 		int32 Secs = CountDownTime - Min * 60;
 
-		FString str = FString::Printf(TEXT("%02d:%02d"), Min, Secs);
+		FString str = FString::Printf(TEXT("%02d"),Secs);
 		HUD->WarmWidget->WarmupTime->SetText(FText::FromString(str));
 	}
 }
@@ -211,7 +226,7 @@ void AShoqianPlayerController::ServerCheckMatchState_Implementation()
 	{
 		WarmupTime = gm->WarmUpTime;
 		MatchTime = gm->MatchTime;
-		CooldownTime = gm->CountDownTime;
+		CooldownTime = gm->CooldownTime;
 		LevelStartingTime = gm->LevelStartingTime;
 		MatchState = gm->GetMatchState();
 		ClientJoinMidgame(MatchState, WarmupTime, MatchTime,CooldownTime, LevelStartingTime);
@@ -237,11 +252,15 @@ void AShoqianPlayerController::ClientReportServerTime_Implementation(float TimeO
 void AShoqianPlayerController::SetHUDTime()
 {
 	float TimeLeft = 0;
-	if (MatchState == "WaitingToStart")
+	if (MatchState == MatchState::WaitingToStart)
 		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == "InProgress")
+	
+	else if (MatchState == MatchState::InProgress)
 		TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
-
+	
+	else if (MatchState == MatchState::CoolDown)
+		TimeLeft = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		
 	uint32 SecsLeft = FMath::CeilToInt(TimeLeft);
 
 	if (CountDownInt != SecsLeft)
@@ -294,11 +313,50 @@ void AShoqianPlayerController::OnCooldownHasStarted()
 {
 	HUD = HUD == nullptr ? Cast<AShoqianHUD>(GetHUD()) : HUD;
 
-	if (HUD)
+	if (HUD && HUD->WarmWidget)
 	{
+
 		HUD->Overlay->SetVisibility(ESlateVisibility::Hidden);
 
-		if (HUD->WarmWidget)
-			HUD->WarmWidget->SetVisibility(ESlateVisibility::Visible);
+		HUD->WarmWidget->SetVisibility(ESlateVisibility::Visible);
+		HUD->WarmWidget->InfoText->SetVisibility(ESlateVisibility::Visible);
+
+		AShotiaGameState* State = Cast<AShotiaGameState>(UGameplayStatics::GetGameState(this));
+
+		AShoqianPlayerState* pState = GetPlayerState<AShoqianPlayerState>();
+		
+		if (State && pState)
+		{
+			FString WinnerText;
+			TArray<AShoqianPlayerState*> TopPlayers = State->TopPlayers;
+			if (TopPlayers.Num() == 0)
+				WinnerText = FString("There is no winner!");
+			else if (TopPlayers.Num() == 1 && TopPlayers[0] == pState)
+				WinnerText = FString("You are the winner!");
+			else if (TopPlayers.Num() == 1)
+				WinnerText = FString("The winner: ") + FString(*TopPlayers[0]->GetName());
+			else if (TopPlayers.Num() > 1)
+			{
+				WinnerText = FString("Players tied for the win:\n");
+				for (auto p : TopPlayers)
+					WinnerText.Append(FString("\n") + FString(*p->GetPlayerName()));
+			}
+
+			HUD->WarmWidget->InfoText->SetText(FText::FromString(WinnerText));
+
+		}
+		else
+		{
+			Debug("Failed to find the actual state");
+		}
+
+	}
+
+	ACharacterController* Controller = Cast<ACharacterController>(GetPawn());
+
+	if (Controller && Controller->GetCombat())
+	{
+		Controller->bDisableGameplay = true;
+		Controller->GetCombat()->SetFire(false);
 	}
 }

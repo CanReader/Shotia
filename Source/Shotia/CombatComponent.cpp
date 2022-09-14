@@ -101,6 +101,7 @@ void UCombatComponent::EquipWeapon(AWeaponClass* Weapon)
 void UCombatComponent::InitializeMag()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssultRifle,StartingARAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher,StartingRocketAmmo);
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()

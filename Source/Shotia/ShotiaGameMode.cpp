@@ -2,6 +2,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
 #include "ShoqianPlayerState.h"
+#include "ShotiaGameState.h"
 
 namespace MatchState
 {
@@ -57,15 +58,30 @@ void AShotiaGameMode::Tick(float DeltaTime)
 		if (CountDownTime <= 0.f)
 			SetMatchState(MatchState::CoolDown);
 	}
+	else if (GetMatchState() == MatchState::CoolDown)
+	{
+		CountDownTime = CooldownTime + WarmUpTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+
+		if (CountDownTime <= 0.f)
+			RestartGame();
+	}
 }
 
 void AShotiaGameMode::EliminatePlayer(ACharacterController* EliminatedPlayer, AShoqianPlayerController* VictimController, AShoqianPlayerController* Attacker)
 {
+	if (MatchState != MatchState::InProgress)
+		return;
+
 	AShoqianPlayerState* AttackerState = Attacker ? Cast<AShoqianPlayerState>(Attacker->PlayerState) : nullptr;
 	AShoqianPlayerState* VictimState = VictimController ? Cast<AShoqianPlayerState>(VictimController->PlayerState) : nullptr;
 
-	if (AttackerState && AttackerState != VictimState)
+	AShotiaGameState* State = GetGameState<AShotiaGameState>();
+
+	if (AttackerState && AttackerState != VictimState && State)
+	{
 		AttackerState->IncreaseKillBy(1);
+		State->UpdateTopPlayers(AttackerState);
+	}
 
 	if (VictimState)
 		VictimState->IncreaseDeathBy(1);

@@ -49,6 +49,7 @@ public:
 
 	void UpdateAmmoValues();
 
+	void SetFire(bool IsPressed);
 protected:
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitLoc);
@@ -71,7 +72,6 @@ private:
 
 	void SetAim(bool IsAiming);
 
-	void SetFire(bool IsPressed);
 
 	void Fire();
 
@@ -91,6 +91,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 60;
+	int32 StartingRocketAmmo = 5;
 
 	//Carries ammo for the current weapon
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_CarriedAmmo)

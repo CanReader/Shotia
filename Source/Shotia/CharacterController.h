@@ -207,6 +207,8 @@ public:
 
 	void PollInit();
 
+	void RotateInPlace(float DeltaTime);
+
 	UFUNCTION()
 		void UpdateHUD();
 
@@ -221,10 +223,14 @@ public:
 
 	AShoqianPlayerController* PlayerController;
 
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
+
 	//Inline functions
 	bool GetIsAiming();
 	AWeaponClass* GetWeapon();
 	ECombatState GetCombatState()const;
+	UCombatComponent* GetCombat();
 	FORCEINLINE float GetAOYaw() { return AO_Yaw; }
 	FORCEINLINE float GetAOPitch() { return AO_Pitch; }
 	FORCEINLINE ETurningInPlace GetTurnDirection() { return TurnDirection; }

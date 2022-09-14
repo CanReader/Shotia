@@ -82,24 +82,17 @@ void ACharacterController::Tick(float DeltaTime)
 	
 	SetSpeed(FMath::FInterpTo(GetCharacterMovement()->MaxWalkSpeed, TargetSpeed, DeltaTime, 6.0f));
 
-	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
-		AimOffset(DeltaTime);
-	else
-	{
-		TimeSinceLastMovementReplication += DeltaTime;
-		if (TimeSinceLastMovementReplication > 0.25f)
-			OnRep_ReplicatedMovement();
-	}
+	RotateInPlace(DeltaTime);
 
 	HideCharacterIfClose();
 
+	CalculateAO_Pitch();
+	
 	if (PlayerController)
 		if (Combat && Combat->EquippedWeapon)
 			PlayerController->SetHUDAmmoVisibility(true);
 		else
 			PlayerController->SetHUDAmmoVisibility(false);
-
-	CalculateAO_Pitch();
 
 }
 
@@ -149,6 +142,7 @@ void ACharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ACharacterController, OverlappedWeapon, COND_OwnerOnly);
+	DOREPLIFETIME(ACharacterController, bDisableGameplay);
 	DOREPLIFETIME(ACharacterController, AimSpeed);
 	DOREPLIFETIME(ACharacterController, SprintSpeed);
 	DOREPLIFETIME(ACharacterController, Health)
@@ -168,6 +162,9 @@ void ACharacterController::Destroyed()
 
 	if (ParticleComp)
 	 ParticleComp->DestroyComponent();
+
+	if (Combat && Combat->EquippedWeapon)
+		Combat->EquippedWeapon->Drop();
 }
 
 void ACharacterController::OnRep_OverlappingWeapon(AWeaponClass* LastWeapon)
@@ -243,6 +240,11 @@ void ACharacterController::MulticastEliminate_Implementation()
 		StartDissolving();
 	}
 
+	bDisableGameplay = true;
+	GetCharacterMovement()->DisableMovement();
+	if (Combat)
+		Combat->SetFire(false);
+
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -303,6 +305,7 @@ void ACharacterController::HideCharacterIfClose()
 
 void ACharacterController::MoveForward(float Value)
 {
+	if (bDisableGameplay) return;
 	if (Controller != nullptr && Value != 0.0f)
 	{
 		const FRotator YawRotation(0.0f,Controller->GetControlRotation().Yaw, 0.0f);
@@ -314,6 +317,8 @@ void ACharacterController::MoveForward(float Value)
 
 void ACharacterController::MoveRight(float Value)
 {
+	if (bDisableGameplay) return;
+
 	if (Controller != nullptr && Value != 0.0f)
 	{
 		const FRotator YawRotation(0.0f,Controller->GetControlRotation().Yaw,0.0f);
@@ -349,6 +354,7 @@ void ACharacterController::Jump()
 
 void ACharacterController::InterractKeyPressed()
 {
+	if (bDisableGameplay) return;
 	if (Combat)
 	{
 			Combat->EquipWeapon(OverlappedWeapon);
@@ -358,6 +364,7 @@ void ACharacterController::InterractKeyPressed()
 
 void ACharacterController::CrouchKeyPressed()
 {
+	if (bDisableGameplay) return;
 	if (!bIsCrouched)
 		Crouch();
 	else
@@ -366,7 +373,7 @@ void ACharacterController::CrouchKeyPressed()
 
 void ACharacterController::ReloadPressed()
 {
-	Debug("Reload pressed")
+	if (bDisableGameplay) return;
 
 	if (Combat)
 		Combat->Reload();
@@ -374,6 +381,8 @@ void ACharacterController::ReloadPressed()
 
 void ACharacterController::AimButtonPressed()
 {
+	if (bDisableGameplay) return;
+
 	if (Combat && GetWeaponEquipped())
 	{
 		Combat->SetAim(true);
@@ -386,6 +395,8 @@ void ACharacterController::AimButtonPressed()
 
 void ACharacterController::AimButtonReleased()
 {
+	if (bDisableGameplay) return;
+
 	if (Combat && GetWeaponEquipped())
 		Combat->SetAim(false);
 
@@ -394,6 +405,8 @@ void ACharacterController::AimButtonReleased()
 
 void ACharacterController::FireButtonPressed()
 {
+	if (bDisableGameplay) return;
+
 	if (Combat )
 	{
 		Combat->SetFire(true);
@@ -402,6 +415,8 @@ void ACharacterController::FireButtonPressed()
 
 void ACharacterController::FireButtonReleased()
 {
+	if (bDisableGameplay) return;
+
 	if (Combat)
 		Combat->SetFire(false);
 }
@@ -682,6 +697,11 @@ ECombatState ACharacterController::GetCombatState() const
 	return Combat->CState;
 }
 
+UCombatComponent* ACharacterController::GetCombat()
+{
+	return Combat;
+}
+
 FVector ACharacterController::GetHitTarget()
 {
 	return Combat->HitPoint;
@@ -695,6 +715,20 @@ void ACharacterController::PollInit()
 		PlayerController->SetHUDDeaths(0);
 		PlayerController->SetHUDAmmo(0);
 		PlayerController->SetHUDMagAmmo(0);
+	}
+}
+
+void ACharacterController::RotateInPlace(float DeltaTime)
+{
+	if (bDisableGameplay) return;
+
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+		AimOffset(DeltaTime);
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > 0.25f)
+			OnRep_ReplicatedMovement();
 	}
 }
 

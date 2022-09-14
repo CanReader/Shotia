@@ -31,9 +31,13 @@ public:
 	float WarmUpTime = 10.f;
 	
 	UPROPERTY(EditDefaultsOnly)
+	float CooldownTime = 10.f;
+	
 	float CountDownTime = 0.f;
 
 	float LevelStartingTime = 0.f;
+
+	FORCEINLINE	float GetCountdownTime() { return CountDownTime; }
 
 protected:
 	virtual void BeginPlay() override;
