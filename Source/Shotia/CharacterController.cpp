@@ -663,8 +663,6 @@ void ACharacterController::PlayReload()
 	{
 		UAnimInstance* instance = GetMesh()->GetAnimInstance();
 
-		Debug("Playing reload");
-
 		if (instance)
 		{
 			FName Section;
@@ -672,6 +670,9 @@ void ACharacterController::PlayReload()
 			switch (Combat->EquippedWeapon->GetWeaponType())
 			{
 			case EWeaponType::EWT_AssultRifle:
+				Section = FName("Rifle");
+				break;
+			case EWeaponType::EWT_RocketLauncher:
 				Section = FName("Rifle");
 				break;
 			default:
