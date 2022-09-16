@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Shotia/ProjectileBullet.h"
+#include "RocketProjectileMovement.h"
 #include "RocketProjectile.generated.h"
 
 /**
@@ -19,6 +20,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* TrailSystem;
+
+	UPROPERTY(VisibleAnywhere)
+		URocketProjectileMovement* RocketMove;
 
 protected:
 	virtual void OnHit(UPrimitiveComponent* HitComp,
@@ -39,6 +43,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 		UStaticMeshComponent* RocketMesh;
+
+
 
 
 

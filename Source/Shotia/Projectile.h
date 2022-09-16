@@ -40,6 +40,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 		float Damage = 20;
 
+	UPROPERTY(VisibleAnywhere)
+		UProjectileMovementComponent* MoveComp;
+
 private:
 	//Properties
 	UPROPERTY(EditAnywhere)
@@ -56,7 +59,5 @@ private:
 
 		UParticleSystemComponent* TracerComponent;
 
-	UPROPERTY(VisibleAnywhere)
-		UProjectileMovementComponent* MoveComp;
 	//Functions
 };

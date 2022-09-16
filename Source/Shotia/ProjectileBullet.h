@@ -12,7 +12,9 @@ class SHOTIA_API AProjectileBullet : public AProjectile
 	GENERATED_BODY()
 	
 public:
-		virtual void OnHit(UPrimitiveComponent* HitComp,
+	AProjectileBullet();
+	
+	virtual void OnHit(UPrimitiveComponent* HitComp,
 			AActor* OtherActor,
 			UPrimitiveComponent* OtherComp,
 			FVector NormalImpulse,
