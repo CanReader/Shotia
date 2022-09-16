@@ -80,10 +80,7 @@ public:
 	int32 Ammo;
 
 	UPROPERTY(EditAnywhere)
-	int32 MagAmmo;
-
-	UPROPERTY(EditAnywhere)
-	int32 MaxAmmo = 30;
+	int32 MaxAmmo;
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* EquipSound;
