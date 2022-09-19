@@ -76,6 +76,11 @@ public:
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed = 20.f;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float FireDelay = 0.15f;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	bool bAutomatic = true;
+
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;
 
@@ -104,7 +109,6 @@ public:
 	FORCEINLINE bool IsEmpty() { return Ammo == 0; }
 	FORCEINLINE int32 GetMaxAmmo() const { return MaxAmmo; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
-	//FORCEINLINE int32 AmmoCap() const { return MagAmmo; }
 
 private:
 	//Variables

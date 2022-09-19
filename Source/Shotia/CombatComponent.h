@@ -91,7 +91,13 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 60;
+	UPROPERTY(EditAnywhere)
 	int32 StartingRocketAmmo = 5;
+	UPROPERTY(EditAnywhere)
+	int32 StartingPistolAmmo = 30;
+	UPROPERTY(EditAnywhere)
+	int32 StartingSMGAmmo = 60;
+
 
 	//Carries ammo for the current weapon
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_CarriedAmmo)
@@ -120,12 +126,7 @@ private:
 	float CurrentFov;
 
 	FTimerHandle FireTimer;
-	UPROPERTY(EditAnywhere, Category = Combat)
-	float FireDelay = 0.15f;
-
-	UPROPERTY(EditAnywhere, Category = Combat)
-	bool Automatic = true;
-
+	
 	void FireTimerStart();
 	void FireTimerFinish();
 

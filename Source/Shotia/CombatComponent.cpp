@@ -63,6 +63,9 @@ void UCombatComponent::EquipWeapon(AWeaponClass* Weapon)
 		this->EquippedWeapon = Weapon;
 		this->EquippedWeapon->SetWeaponState(UWeaponState::EWS_Equipped);
 
+		if (Weapon->GetMaxAmmo() <= 0)
+			Debug("Max ammo 0 olamaz gerizekali")
+
 		const USkeletalMeshSocket* WeaponSocket = Player->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 
 		if (WeaponSocket)
@@ -102,6 +105,8 @@ void UCombatComponent::InitializeMag()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssultRifle,StartingARAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher,StartingRocketAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol,StartingPistolAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Submachine,StartingSMGAmmo);
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -215,7 +220,7 @@ void UCombatComponent::HandleReload()
 
 int32 UCombatComponent::ReloadAmount()
 {
-	if (EquippedWeapon)
+	if (EquippedWeapon != nullptr)
 	{
 		int32 RoomInMag = EquippedWeapon->GetMaxAmmo() - EquippedWeapon->GetAmmo();
 
@@ -226,6 +231,7 @@ int32 UCombatComponent::ReloadAmount()
 			return FMath::Clamp(RoomInMag,0,least);
 		}
 	}
+	Debug("Umm there is a glitch?");
 	return 0;
 }
 
@@ -365,7 +371,7 @@ void UCombatComponent::FireTimerStart()
 		FireTimer,
 		this,
 		&UCombatComponent::FireTimerFinish,
-		FireDelay);
+		EquippedWeapon->FireDelay);
 }
 
 void UCombatComponent::FireTimerFinish()
@@ -373,7 +379,7 @@ void UCombatComponent::FireTimerFinish()
 	if (EquippedWeapon == nullptr)
 		return;
 
-	if (bFirePressed && Automatic)
+	if (bFirePressed && EquippedWeapon->bAutomatic)
 	{
 		Fire();
 	}
