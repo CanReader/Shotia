@@ -27,6 +27,12 @@ void AHitScanWeapon::Fire(const FVector& HitPos)
 		UWorld* world = GetWorld();
 		if (world)
 		{
+			if(MuzzleFlashParticles)
+			UGameplayStatics::SpawnEmitterAtLocation(world, MuzzleFlashParticles,SocketTransform);
+
+			if (FireSound)
+				UGameplayStatics::PlaySoundAtLocation(this,FireSound,SocketTransform.GetLocation());
+
 			world->LineTraceSingleByChannel(hit, Start, End, ECollisionChannel::ECC_Pawn);
 
 			if (hit.bBlockingHit)
@@ -40,6 +46,9 @@ void AHitScanWeapon::Fire(const FVector& HitPos)
 
 				if (ImpactParticles)
 					UGameplayStatics::SpawnEmitterAtLocation(world, ImpactParticles, hit.ImpactPoint, hit.ImpactNormal.Rotation());
+
+				if (HitSound)
+					UGameplayStatics::SpawnSoundAtLocation(this,HitSound,hit.ImpactPoint);
 			}
 		}
 		if (BeamParticles)
