@@ -1,6 +1,7 @@
 #include "Projectile.h"
 #include "Kismet/GameplayStatics.h"
 #include "CharacterController.h"
+#include "NiagaraFunctionLibrary.h"
 
 AProjectile::AProjectile()
 {
@@ -52,5 +53,51 @@ void AProjectile::Destroyed()
 
 	if (ImpactSound)
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactSound, GetActorLocation());
+}
+
+void AProjectile::SpawnTrailSystem()
+{
+	if (TrailSystem)
+		TrailComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem, GetRootComponent(), FName(), GetActorLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
+}
+
+void AProjectile::ExplodeDamage(float MinDamage, float InnerRadius, float OuterRadius, float DamageFalloff)
+{
+	APawn* pPawn = GetInstigator();
+
+	if (pPawn)
+	{
+		auto Player = pPawn->GetController();
+
+		if (Player)
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				this,
+				Damage,
+				MinDamage,
+				GetActorLocation(),
+				InnerRadius,
+				OuterRadius,
+				DamageFalloff,
+				UDamageType::StaticClass(),
+				TArray<AActor*>(),
+				this,
+				Player
+			);
+
+	}
+}
+
+void AProjectile::DestroyTimerStart()
+{
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&AProjectile::DestroyTimerFinished,
+		DestroyTime);
+}
+
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
 }
 

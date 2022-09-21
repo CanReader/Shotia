@@ -37,11 +37,38 @@ public:
 	//Functions
 
 protected:
+	UPROPERTY(VisibleAnywhere)
+		UStaticMeshComponent* ProjectileMesh;
+
 	UPROPERTY(EditAnywhere)
 		float Damage = 20;
 
 	UPROPERTY(VisibleAnywhere)
 		UProjectileMovementComponent* MoveComp;
+
+	UPROPERTY(EditAnywhere)
+		class UNiagaraSystem* TrailSystem;
+
+	UPROPERTY(EditAnywhere)
+		class UNiagaraComponent* TrailComponent;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyTime = 0.3f;
+
+	FTimerHandle DestroyTimer;
+
+	UFUNCTION()
+	void SpawnTrailSystem();
+	
+	UFUNCTION()
+	void ExplodeDamage(float MinDamage, float InnerRadius, float OuterRadius, float DamageFalloff = 1.f);
+
+	void DestroyTimerStart();
+	UFUNCTION()
+	void DestroyTimerFinished();
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* ImpactSound;
 
 private:
 	//Properties
@@ -54,8 +81,6 @@ private:
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* ImpactParticles;
 
-	UPROPERTY(EditAnywhere)
-		USoundCue* ImpactSound;
 
 		UParticleSystemComponent* TracerComponent;
 

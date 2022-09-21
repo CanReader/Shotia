@@ -18,9 +18,6 @@ public:
 	ARocketProjectile();
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* TrailSystem;
-
 	UPROPERTY(VisibleAnywhere)
 		URocketProjectileMovement* RocketMove;
 
@@ -37,15 +34,8 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 		float MinDamage = 10.f;
 	UPROPERTY(EditDefaultsOnly)
-		float MinDamageRad = 200.f;
+		float MinDamageRad = 150.f;
 	UPROPERTY(EditDefaultsOnly)
-		float MaxDamageRad = 200.f;
-
-	UPROPERTY(VisibleAnywhere)
-		UStaticMeshComponent* RocketMesh;
-
-
-
-
+		float MaxDamageRad = 300.f;
 
 };

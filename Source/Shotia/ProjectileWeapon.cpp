@@ -29,7 +29,18 @@ void AProjectileWeapon::Fire(const FVector& HitPos)
 			SpawnParams.Instigator = InstPawn;
 
 			if (world)
-				world->SpawnActor<AProjectileBullet>(ProjectileClass,SocketTransform.GetLocation(), SocketRotator, SpawnParams);
+			{
+				try
+				{
+				world->SpawnActor<AProjectile>(ProjectileClass,SocketTransform.GetLocation(), SocketRotator, SpawnParams);
+				}
+				catch (const std::exception&)
+				{
+					GEngine->AddOnScreenDebugMessage(-1,1,FColor::Red,"Failed to cast! Bad programming");
+					return;
+				}
+			}
 		}
 	}
 }
+

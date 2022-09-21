@@ -28,6 +28,6 @@ private:
 
 	//Functions
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AProjectileBullet> ProjectileClass;
+	TSubclassOf<AProjectile> ProjectileClass;
 	
 };
