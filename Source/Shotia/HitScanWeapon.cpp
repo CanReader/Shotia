@@ -1,5 +1,6 @@
 #include "Shotia/HitScanWeapon.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "particles/ParticleSystemComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "CharacterController.h"
@@ -21,43 +22,63 @@ void AHitScanWeapon::Fire(const FVector& HitPos)
 		FVector End = Start + (HitPos - Start) * 1.25;
 
 		FHitResult hit;
-
-		FVector BeamEnd = End;
-
-		UWorld* world = GetWorld();
-		if (world)
-		{
-			if(MuzzleFlashParticles)
-			UGameplayStatics::SpawnEmitterAtLocation(world, MuzzleFlashParticles,SocketTransform);
-
-			if (FireSound)
+		WeaponTraceHit(Start,HitPos,hit);
+		
+		if(MuzzleFlashParticles)
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlashParticles, SocketTransform);
+		
+		if (FireSound)
 				UGameplayStatics::PlaySoundAtLocation(this,FireSound,SocketTransform.GetLocation());
+		
+			ACharacterController* player = Cast<ACharacterController>(hit.GetActor());
+			if (player && InstigatorController)
+				UGameplayStatics::ApplyDamage(player, Damage, InstigatorController, this, UDamageType::StaticClass());
+			
+			if (ImpactParticles)
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, hit.ImpactPoint, hit.ImpactNormal.Rotation());
+			
+			if (HitSound)
+				UGameplayStatics::SpawnSoundAtLocation(this,HitSound,hit.ImpactPoint);
 
-			world->LineTraceSingleByChannel(hit, Start, End, ECollisionChannel::ECC_Pawn);
+	}
+}
 
-			if (hit.bBlockingHit)
-			{
-				BeamEnd = hit.ImpactPoint;
-				ACharacterController* player = Cast<ACharacterController>(hit.GetActor());
-				if (player && InstigatorController)
-				{
-					UGameplayStatics::ApplyDamage(player, Damage, InstigatorController, this, UDamageType::StaticClass());
-				}
+FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector HitTarget)
+{
+	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
 
-				if (ImpactParticles)
-					UGameplayStatics::SpawnEmitterAtLocation(world, ImpactParticles, hit.ImpactPoint, hit.ImpactNormal.Rotation());
+	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0,SphereRadius);
+	FVector EndLoc = SphereCenter + RandVec;
+	FVector ToEnd = EndLoc - TraceStart;
 
-				if (HitSound)
-					UGameplayStatics::SpawnSoundAtLocation(this,HitSound,hit.ImpactPoint);
-			}
+	return EndLoc;
+}
+
+void AHitScanWeapon::WeaponTraceHit(const FVector& Start, const FVector& HitTarget, FHitResult& HitResult)
+{
+	UWorld* world = GetWorld();
+
+	if (world)
+	{
+		FVector End = bUseScatter ? TraceEndWithScatter(Start,HitTarget) : Start + (HitTarget - Start) * 1.25;
+
+		world->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Pawn);
+	
+		FVector BeamEnd = End;
+	
+		if (HitResult.bBlockingHit)
+		{
+			BeamEnd = HitResult.ImpactPoint;
 		}
 		if (BeamParticles)
 		{
-			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(world, BeamParticles, SocketTransform);
+			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(world, BeamParticles, Start,FRotator::ZeroRotator);
 			if (Beam)
 			{
-				Beam->SetVectorParameter(FName("Target"),BeamEnd);
+				Beam->SetVectorParameter(FName("Target"), BeamEnd);
 			}
 		}
 	}
 }
+

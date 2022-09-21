@@ -39,6 +39,8 @@ public:
 	virtual void OnRep_ReplicatedMovement() override;
 	virtual void Destroyed() override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+		void ShowSniperScopeWidget(bool bShowScope);
 private:
 	//Functions
 	void MoveForward(float Value);
@@ -55,6 +57,7 @@ private:
 	void FireButtonReleased();
 	void SprintButtonPressed();
 	void SprintButtonReleased();
+
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeaponClass* LastWeapon);

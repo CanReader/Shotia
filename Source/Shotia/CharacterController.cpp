@@ -646,8 +646,6 @@ void ACharacterController::PlayMontage(bool IsAiming)
 
 void ACharacterController::PlayHitReact()
 {
-	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
-
 	UAnimInstance* Instance = GetMesh()->GetAnimInstance();
 
 	if (Instance && HitReactAnim)
@@ -673,6 +671,21 @@ void ACharacterController::PlayReload()
 				Section = FName("Rifle");
 				break;
 			case EWeaponType::EWT_RocketLauncher:
+				Section = FName("Rifle");
+				break;
+			case EWeaponType::EWT_Pistol:
+				Section = FName("Rifle");
+				break;
+			case EWeaponType::EWT_Submachine:
+				Section = FName("Rifle");
+				break;
+			case EWeaponType::EWT_Shotgun:
+				Section = FName("Rifle");
+				break;
+			case EWeaponType::EWT_SniperRifle:
+				Section = FName("Rifle");
+				break;
+			case EWeaponType::EWT_GrenedeLauncher:
 				Section = FName("Rifle");
 				break;
 			default:

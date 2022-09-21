@@ -107,6 +107,9 @@ void UCombatComponent::InitializeMag()
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher,StartingRocketAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol,StartingPistolAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Submachine,StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun,StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle,StartingSniperAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenedeLauncher,StartingGrenedeLauncher);
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -220,18 +223,27 @@ void UCombatComponent::HandleReload()
 
 int32 UCombatComponent::ReloadAmount()
 {
-	if (EquippedWeapon != nullptr)
+	try
 	{
-		int32 RoomInMag = EquippedWeapon->GetMaxAmmo() - EquippedWeapon->GetAmmo();
-
-		if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+		
+		if (EquippedWeapon != nullptr)
 		{
-			int32 AmmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-			int32 least = FMath::Min(RoomInMag,AmmountCarried);
-			return FMath::Clamp(RoomInMag,0,least);
+			int32 RoomInMag = EquippedWeapon->GetMaxAmmo() - EquippedWeapon->GetAmmo();
+			
+			if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+			{
+				int32 AmmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+				int32 least = FMath::Min(RoomInMag,AmmountCarried);
+				return FMath::Clamp(RoomInMag,0,least);
+			}
 		}
 	}
-	Debug("Umm there is a glitch?");
+	catch (const std::exception&)
+	{
+		Debug("I hate Unreal Engine");
+		return 0;
+	}
+
 	return 0;
 }
 
@@ -337,8 +349,12 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 void UCombatComponent::SetAim(bool Isaiming)
 {
+	if (Player == nullptr || EquippedWeapon == nullptr) return;
 	IsAiming = Isaiming;
 	ServerSetAim(Isaiming);
+
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+		Player->ShowSniperScopeWidget(Isaiming);
 }
 
 void UCombatComponent::SetFire(bool IsPressed)

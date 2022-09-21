@@ -91,13 +91,24 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 60;
+	
 	UPROPERTY(EditAnywhere)
 	int32 StartingRocketAmmo = 5;
+	
 	UPROPERTY(EditAnywhere)
 	int32 StartingPistolAmmo = 30;
+	
 	UPROPERTY(EditAnywhere)
 	int32 StartingSMGAmmo = 60;
 
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 30;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperAmmo = 10;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenedeLauncher = 3;
 
 	//Carries ammo for the current weapon
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_CarriedAmmo)
