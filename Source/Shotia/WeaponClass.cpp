@@ -46,7 +46,9 @@ void AWeaponClass::BeginPlay()
 	
 	AreaSphere->OnComponentEndOverlap.AddDynamic(this,&AWeaponClass::OnSphereLeaveOverlap);
 	}
-	
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
+	WeaponMesh->MarkRenderStateDirty();
+	EnableCustomDepth(true);
 }
 
 
@@ -91,6 +93,15 @@ void AWeaponClass::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(AWeaponClass, Ammo);
 }
 
+void AWeaponClass::EnableCustomDepth(bool bEnabled)
+{
+	if (WeaponMesh)
+	{
+		
+		WeaponMesh->SetRenderCustomDepth(bEnabled);
+	}
+}
+
 void AWeaponClass::SetWeaponState(UWeaponState NewState)
 {
 	this->State = NewState;
@@ -111,6 +122,7 @@ void AWeaponClass::SetWeaponState(UWeaponState NewState)
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		}
+		EnableCustomDepth(false);
 		break;
 	case UWeaponState::EWS_Dropped:
 		if (HasAuthority())
@@ -121,7 +133,9 @@ void AWeaponClass::SetWeaponState(UWeaponState NewState)
 		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn,ECR_Block);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera,ECR_Ignore);
-
+		EnableCustomDepth(true);
+		WeaponMesh->MarkRenderStateDirty();
+		
 		break;
 	case UWeaponState::EWS_Max:
 		break;
@@ -179,12 +193,12 @@ void AWeaponClass::OnRep_WeaponState()
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		if (WeaponType == EWeaponType::EWT_Submachine)
 		{
-			Debug("SMG has been equipped");
 			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			WeaponMesh->SetSimulatePhysics(true);
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		}
+		EnableCustomDepth(false);
 			break;
 	case UWeaponState::EWS_Dropped:
 		WeaponMesh->SetSimulatePhysics(true);
@@ -193,6 +207,8 @@ void AWeaponClass::OnRep_WeaponState()
 		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Block);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECR_Ignore);
+		WeaponMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 		break;
 	case UWeaponState::EWS_Max:
 		break;
@@ -203,6 +219,16 @@ void AWeaponClass::OnRep_WeaponState()
 
 void AWeaponClass::OnRep_Ammo()
 {
+	Character = Character == nullptr ? Cast<ACharacterController>(GetOwner()) : Character;
+
+	if(Character && Character->GetCombat() && Ammo == MaxAmmo)
+	{
+		UAnimInstance* Instance = Character->GetMesh()->GetAnimInstance();
+
+		if (Instance)
+			Instance->Montage_JumpToSection(FName("ShotgunEnd"));
+	}
+
 	SetHUDAmmo();
 }
 
@@ -214,7 +240,7 @@ void AWeaponClass::Tick(float DeltaTime)
 
 void AWeaponClass::OnRep_Owner()
 {
-	Super::OnRep_Owner();
+	Super::OnRep_Owner(); 
 
 	if (Owner == nullptr)
 	{

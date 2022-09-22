@@ -94,6 +94,8 @@ void ACharacterController::Tick(float DeltaTime)
 		else
 			PlayerController->SetHUDAmmoVisibility(false);
 
+	if (Combat == nullptr)
+		Debug("Combat component is NULL!! Restart  the fucking game");
 }
 
 void ACharacterController::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -671,19 +673,19 @@ void ACharacterController::PlayReload()
 				Section = FName("Rifle");
 				break;
 			case EWeaponType::EWT_RocketLauncher:
-				Section = FName("Rifle");
+				Section = FName("RocketLauncher");
 				break;
 			case EWeaponType::EWT_Pistol:
-				Section = FName("Rifle");
+				Section = FName("Pistol");
 				break;
 			case EWeaponType::EWT_Submachine:
-				Section = FName("Rifle");
+				Section = FName("Pistol");
 				break;
 			case EWeaponType::EWT_Shotgun:
-				Section = FName("Rifle");
+				Section = FName("Shotgun");
 				break;
 			case EWeaponType::EWT_SniperRifle:
-				Section = FName("Rifle");
+				Section = FName("Sniper");
 				break;
 			case EWeaponType::EWT_GrenedeLauncher:
 				Section = FName("Rifle");

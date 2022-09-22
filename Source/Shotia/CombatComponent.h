@@ -34,6 +34,9 @@ public:
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 	
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
+
 	void Reload();
 
 	UFUNCTION(Server, Reliable)
@@ -48,6 +51,8 @@ public:
     int32 ReloadAmount();
 
 	void UpdateAmmoValues();
+
+	void UpdateShotgunAmmo();
 
 	void SetFire(bool IsPressed);
 protected:
@@ -102,7 +107,7 @@ private:
 	int32 StartingSMGAmmo = 60;
 
 	UPROPERTY(EditAnywhere)
-	int32 StartingShotgunAmmo = 30;
+	int32 StartingShotgunAmmo = 6;
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingSniperAmmo = 10;

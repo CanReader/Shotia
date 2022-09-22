@@ -91,6 +91,8 @@ public:
 	USoundCue* EquipSound;
 
 	//Functions
+	void EnableCustomDepth(bool bEnabled);
+
 	void SetWeaponState(UWeaponState NewState);
 	
 	void SetHUDAmmo();

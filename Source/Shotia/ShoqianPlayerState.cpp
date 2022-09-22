@@ -49,27 +49,34 @@ void AShoqianPlayerState::OnRep_DeathCount()
 
 	if (Character)
 	{
+		try
+		{
 		if (Character->Controller == nullptr)
 			return;
 
-		Player = Player == nullptr ? Cast<AShoqianPlayerController>(Character->Controller) : Player;
+		if (Character != nullptr)
+			if (Player != nullptr)
+				Player = Cast<AShoqianPlayerController>(Character->PlayerController);
 
 		if (Player)
 		{
 			Player->SetHUDDeaths(DeathCount);
 		}
-
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 	}
 }
 
 void AShoqianPlayerState::IncreaseDeathBy(int Amount)
 {
-	DeathCount += Amount;
-
 	Character = Character == nullptr ? Cast<ACharacterController>(GetPawn()) : Character;
 
 	if (Character)
 	{
+		DeathCount += Amount;
 		Player = Player == nullptr ? Cast<AShoqianPlayerController>(Character->Controller) : Player;
 
 		if (Player)

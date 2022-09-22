@@ -154,7 +154,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	FVector2D CrosshairLocation(VPSize.X / 2, VPSize.Y / 2);
 	FVector CrosshairWordPos;
 	FVector CrosshairWordDir;
-
+	
 	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(UGameplayStatics::GetPlayerController(this,0),CrosshairLocation,CrosshairWordPos, CrosshairWordDir);
 
 	if (Player && bScreenToWorld)
@@ -169,9 +169,17 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 }
 
+void UCombatComponent::ShotgunShellReload()
+{
+	if(Player && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+		UpdateShotgunAmmo();
+}
+
 void UCombatComponent::Reload()
 {
-	if(CarriedAmmo > 0 && CState != ECombatState::ECS_Reloading)
+	if (EquippedWeapon == nullptr) return;
+
+	if(CarriedAmmo > 0 && CState != ECombatState::ECS_Reloading && EquippedWeapon->MaxAmmo != EquippedWeapon->Ammo)
 		ServerReload();
 }
 
@@ -216,6 +224,35 @@ void UCombatComponent::UpdateAmmoValues()
 	}
 }
 
+void UCombatComponent::UpdateShotgunAmmo()
+{
+	if (Player != nullptr && EquippedWeapon)
+	{
+		if (CarriedAmmoMap.Contains(EWeaponType::EWT_Shotgun))
+		{
+			CarriedAmmoMap[EWeaponType::EWT_Shotgun] -= 1;
+			CarriedAmmo = CarriedAmmoMap[EWeaponType::EWT_Shotgun];
+
+			Controller = Controller ? Controller : Cast<AShoqianPlayerController>(Player->Controller);
+
+			if (Controller)
+				Controller->SetHUDMagAmmo(CarriedAmmo);
+
+			EquippedWeapon->AddAmmo(-1);
+
+			//JumpToShotgunEnd
+
+			if (EquippedWeapon->Ammo == EquippedWeapon->MaxAmmo || CarriedAmmo == 0)
+			{
+				UAnimInstance* Instance = Player->GetMesh()->GetAnimInstance();
+
+				if (Instance)
+					Instance->Montage_JumpToSection(FName("ShotgunEnd"));
+			}
+		}
+	}
+}
+
 void UCombatComponent::HandleReload()
 {
 	Player->PlayReload();
@@ -224,8 +261,7 @@ void UCombatComponent::HandleReload()
 int32 UCombatComponent::ReloadAmount()
 {
 	try
-	{
-		
+	{	
 		if (EquippedWeapon != nullptr)
 		{
 			int32 RoomInMag = EquippedWeapon->GetMaxAmmo() - EquippedWeapon->GetAmmo();
@@ -234,13 +270,14 @@ int32 UCombatComponent::ReloadAmount()
 			{
 				int32 AmmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 				int32 least = FMath::Min(RoomInMag,AmmountCarried);
+				
 				return FMath::Clamp(RoomInMag,0,least);
 			}
 		}
 	}
 	catch (const std::exception&)
 	{
-		Debug("I hate Unreal Engine");
+		Debug("Fuck you Unreal Engine");
 		return 0;
 	}
 
@@ -345,6 +382,20 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 	if (Controller)
 		Controller->SetHUDMagAmmo(CarriedAmmo);
+
+	bool bJumpToEnd = CState == ECombatState::ECS_Reloading && EquippedWeapon != nullptr && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun && CarriedAmmo == 0;
+
+	if (bJumpToEnd)
+	{
+		//JumpToShotgunEnd
+		if (EquippedWeapon->Ammo == EquippedWeapon->MaxAmmo || CarriedAmmo == 0)
+		{
+			UAnimInstance* Instance = Player->GetMesh()->GetAnimInstance();
+
+			if (Instance)
+				Instance->Montage_JumpToSection(FName("ShotgunEnd"));
+		}
+	}
 }
 
 void UCombatComponent::SetAim(bool Isaiming)
