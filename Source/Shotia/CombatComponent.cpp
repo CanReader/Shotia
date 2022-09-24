@@ -59,19 +59,14 @@ void UCombatComponent::EquipWeapon(AWeaponClass* Weapon)
 	{
 		if (EquippedWeapon)
 			EquippedWeapon->Drop();
-
+		
 		this->EquippedWeapon = Weapon;
 		this->EquippedWeapon->SetWeaponState(UWeaponState::EWS_Equipped);
 
 		if (Weapon->GetMaxAmmo() <= 0)
 			Debug("Max ammo 0 olamaz gerizekali")
-
-		const USkeletalMeshSocket* WeaponSocket = Player->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-
-		if (WeaponSocket)
-		{
-			WeaponSocket->AttachActor(Weapon,Player->GetMesh());
-		}
+			
+		AttachItemByHand(Weapon,false);
 
 		this->EquippedWeapon->SetOwner(Player);
 		this->EquippedWeapon->ShowPickWidget(false);
@@ -92,8 +87,8 @@ void UCombatComponent::EquipWeapon(AWeaponClass* Weapon)
 		this->Player->GetCharacterMovement()->bOrientRotationToMovement = false;
 		this->Player->bUseControllerRotationYaw = true;
 		this->Player->bUseControllerRotationYaw = true;
-
 		if (EquippedWeapon->EquipSound)
+
 			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound,EquippedWeapon->GetActorLocation());
 
 		if (EquippedWeapon->IsEmpty())
@@ -166,6 +161,9 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		Start += CrosshairWordDir * (DistanceToChar + 50.0f);
 
 		GetWorld()->LineTraceSingleByChannel(TraceHitResult,Start,End,ECollisionChannel::ECC_Visibility);
+
+		if (TraceHitResult.ImpactPoint.X == 0)
+			TraceHitResult.ImpactPoint = End*90000;
 	}
 }
 
@@ -253,6 +251,29 @@ void UCombatComponent::UpdateShotgunAmmo()
 	}
 }
 
+void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
+{
+	Player = Player != nullptr ? Player : Cast<ACharacterController>(GetOwner());
+
+	if (Player && Player->GetGrenadeMesh())
+	{
+		Player->GetGrenadeMesh()->SetVisibility(false);
+
+		if (Player->GetGrenadeClass())
+		{
+			const FVector StartingLoc = Player->GetGrenadeMesh()->GetComponentLocation();
+			FVector ToTarget = Target - StartingLoc;
+			FActorSpawnParameters Params;
+			Params.Owner = Player;
+			Params.Instigator = Player;
+			UWorld* world = GetWorld();
+
+			if (world)
+				world->SpawnActor<AProjectile>(Player->GetGrenadeClass(), StartingLoc, ToTarget.Rotation(), Params);
+		}
+	}
+}
+
 void UCombatComponent::HandleReload()
 {
 	Player->PlayReload();
@@ -294,6 +315,15 @@ void UCombatComponent::OnRep_CombatState()
 		break;
 	case ECombatState::ECS_Reloading:
 		HandleReload();
+		break;
+	case ECombatState::ECS_Throwing:
+		CState = ECombatState::ECS_Throwing;
+		if (Player && Player->IsLocallyControlled())
+		{
+			Player->PlayGrenade();
+			AttachItemByHand(EquippedWeapon,true);
+		}
+
 		break;
 	case ECombatState::ECS_Max:
 		break;
@@ -418,9 +448,70 @@ void UCombatComponent::SetFire(bool IsPressed)
 	}
 }
 
+void UCombatComponent::ThrowGrenade()
+{
+	if (CState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr) return;
+
+	CState = ECombatState::ECS_Throwing;
+	if (Player)
+	{
+		Player->PlayGrenade();
+		AttachItemByHand(EquippedWeapon, true);
+		
+		Player->GetGrenadeMesh()->SetVisibility(true);
+
+		if (!Player->HasAuthority())
+			ServerThrowGrenade();
+	}
+
+}
+
+void UCombatComponent::LaunchGrenade()
+{
+	Player->GetGrenadeMesh()->SetVisibility(false);
+	if(Player && Player->IsLocallyControlled())
+	ServerLaunchGrenade(HitPoint);
+}
+
+void UCombatComponent::ServerThrowGrenade_Implementation()
+{
+	CState = ECombatState::ECS_Throwing;
+	if (Player)
+	{
+		Player->PlayGrenade();
+		AttachItemByHand(EquippedWeapon, true);
+
+		Player->GetGrenadeMesh()->SetVisibility(true);
+	}
+}
+
+void UCombatComponent::FinishThrowing()
+{
+	CState = ECombatState::ECS_Unoccupied;
+	AttachItemByHand(EquippedWeapon, false);
+	Player->GetGrenadeMesh()->SetVisibility(false);
+}
+
+void UCombatComponent::AttachItemByHand(AActor* Item,bool bIsLeft)
+{
+	if (Item)
+	{
+		FName Hand = bIsLeft ? FName("LeftHandSocket") : FName("RightHandSocket");
+
+		const USkeletalMeshSocket* WeaponSocket = Player->GetMesh()->GetSocketByName(Hand);
+
+		if (WeaponSocket)
+		{
+			WeaponSocket->AttachActor(Item, Player->GetMesh());
+		}
+	}
+}
+
 void UCombatComponent::Fire()
 {
 	if (!CanFire())return;
+
+	Debug(HitPoint.ToString());
 
 	ServerFire(HitPoint);
 	if (EquippedWeapon)

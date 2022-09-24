@@ -11,6 +11,7 @@
 #include "ShoqianPlayerController.h"
 #include "ShoqianHUD.h"
 #include "WeaponTypes.h"
+#include "GrenadeProjectile.h"
 #include "CombatState.h"
 #include "CombatComponent.generated.h"
 
@@ -45,6 +46,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishReload();
 
+	UFUNCTION(BlueprintCallable)
+	void FinishThrowing();
+
+	void ThrowGrenade();
+
+	UFUNCTION(BlueprintCallable)
+	void LaunchGrenade();
+	
+	UFUNCTION(Server, Reliable)
+	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
+	
 	void HandleReload();
 
 	UFUNCTION(BlueprintCallable)
@@ -55,6 +67,13 @@ public:
 	void UpdateShotgunAmmo();
 
 	void SetFire(bool IsPressed);
+	
+
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
+
+	void AttachItemByHand(AActor* Item,bool bIsLeft);
+
 protected:
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitLoc);

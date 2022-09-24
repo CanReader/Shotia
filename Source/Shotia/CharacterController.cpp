@@ -47,6 +47,11 @@ ACharacterController::ACharacterController()
 	TurnDirection = ETurningInPlace::ETIP_NotTurning;
 
 	Health = MaxHealth;
+
+	GrenadeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Grenade Mesh"));
+	GrenadeMesh->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	GrenadeMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 }
 
 void ACharacterController::BeginPlay()
@@ -70,6 +75,8 @@ void ACharacterController::BeginPlay()
 		Combat->SetIsReplicated(true);
 		Combat->Player = this;
 	}
+	
+	GrenadeMesh->SetVisibility(false);
 
 	PollInit();
 }
@@ -129,6 +136,8 @@ void ACharacterController::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAxis(TEXT("Turn"),this,&ACharacterController::Turn);
 
 	PlayerInputComponent->BindAxis(TEXT("LookUp"),this,&ACharacterController::LookUp);
+
+	PlayerInputComponent->BindAction(TEXT("Throw"),IE_Pressed,this,&ACharacterController::ThrowButtonPressed);
 }
 
 void ACharacterController::PostInitializeComponents()
@@ -435,6 +444,14 @@ void ACharacterController::SprintButtonReleased()
 	SprintSpeed = 1;
 }
 
+void ACharacterController::ThrowButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->ThrowGrenade();
+	}
+}
+
 void ACharacterController::ServerInterractKeyPressed_Implementation()
 {
 	if (Combat)
@@ -701,6 +718,16 @@ void ACharacterController::PlayReload()
 	}
 }
 
+void ACharacterController::PlayGrenade()
+{
+	UAnimInstance* Instance = GetMesh()->GetAnimInstance();
+
+	if (Instance)
+	{
+		Instance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
+
 bool ACharacterController::GetIsAiming()
 {
 	return (Combat && Combat->IsAiming);
@@ -720,6 +747,11 @@ ECombatState ACharacterController::GetCombatState() const
 UCombatComponent* ACharacterController::GetCombat()
 {
 	return Combat;
+}
+
+TSubclassOf<AGrenadeProjectile> ACharacterController::GetGrenadeClass()
+{
+	return GrenadeClass;
 }
 
 FVector ACharacterController::GetHitTarget()

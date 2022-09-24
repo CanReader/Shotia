@@ -11,17 +11,24 @@ void AShoqianPlayerState::OnRep_Score()
 {
 	Super::OnRep_Score();
 
+	try
+	{
 	Character = Character == nullptr ? Cast<ACharacterController>(GetPawn()) : Character;
 
 	if (Character)
 	{
+		if(Character && Character->Controller)
 		Player = Player == nullptr ? Cast<AShoqianPlayerController>(Character->Controller) : Player;
 		
 		if (Player)
 		{
 			Player->SetHUDKills(Score);
 		}
-
+	}
+	}
+	catch (const std::exception&)
+	{
+		return;
 	}
 }
 

@@ -16,6 +16,7 @@
 #include "Components/TimelineComponent.h"
 #include "Sound/SoundCue.h"
 #include "CombatState.h"
+#include "GrenadeProjectile.h"
 
 #include "CharacterController.generated.h"
 
@@ -57,6 +58,7 @@ private:
 	void FireButtonReleased();
 	void SprintButtonPressed();
 	void SprintButtonReleased();
+	void ThrowButtonPressed();
 
 
 	UFUNCTION()
@@ -98,6 +100,12 @@ private:
 
 	//Properties
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AGrenadeProjectile> GrenadeClass;
+
+	UPROPERTY(VisibleAnywhere)
+		UStaticMeshComponent* GrenadeMesh;
+
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 		USpringArmComponent* CameraBoom;
 
@@ -116,6 +124,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats", ReplicatedUsing = OnRep_HealthChanged)
 		float Health;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	UAnimMontage* ThrowGrenadeMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	UAnimMontage* FireWeaponAnim;
@@ -203,6 +214,7 @@ public:
 	void PlayMontage(bool IsAiming);
 	void PlayHitReact();
 	void PlayReload();
+	void PlayGrenade();
 
 	void OnCurveUpdate(float NewValue);
 
@@ -234,6 +246,7 @@ public:
 	AWeaponClass* GetWeapon();
 	ECombatState GetCombatState()const;
 	UCombatComponent* GetCombat();
+	TSubclassOf<AGrenadeProjectile> GetGrenadeClass();
 	FORCEINLINE float GetAOYaw() { return AO_Yaw; }
 	FORCEINLINE float GetAOPitch() { return AO_Pitch; }
 	FORCEINLINE ETurningInPlace GetTurnDirection() { return TurnDirection; }
@@ -243,4 +256,5 @@ public:
 	FORCEINLINE bool GetProxyRotateRootBone() { return bRotateRootBone; }
 	FORCEINLINE float GetHealth() { return Health; }
 	FORCEINLINE float GetMaxHealth() { return MaxHealth; }
+	FORCEINLINE UStaticMeshComponent* GetGrenadeMesh() { return GrenadeMesh; }
 };

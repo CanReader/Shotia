@@ -81,5 +81,5 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	IsEliminated = Player->GetIsEliminated();
 
-	bUseFabrik = !(Player->GetCombatState() == ECombatState::ECS_Reloading);
+	bUseFabrik = Player->GetCombatState() == ECombatState::ECS_Unoccupied;
 }
