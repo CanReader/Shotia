@@ -90,6 +90,15 @@ void AShoqianPlayerController::SetHUDMatchCountDown(float CountDownTime)
 	}
 }
 
+void AShoqianPlayerController::SetHUDGrenadeCount(int32 Grenades)
+{
+	if (HUD && HUD->Overlay)
+	{
+		FString GrenadeText = FString::FromInt(Grenades);
+		HUD->Overlay->GrenadeCountText->SetText(FText::FromString(GrenadeText));
+	}
+}
+
 void AShoqianPlayerController::SetHUDWarmupCountdown(float CountDownTime)
 {
 	HUD = HUD == nullptr ? Cast<AShoqianHUD>(GetHUD()) : HUD;
@@ -183,6 +192,8 @@ void AShoqianPlayerController::PollInit()
 				SetHUDHealth(HUDHealth,HUDMaxHealth);
 				SetHUDKills(HUDScore);
 				SetHUDDeaths(HUDDeath);
+				ACharacterController* player = Cast<ACharacterController>(GetPawn());
+				SetHUDGrenadeCount(player->GetCombat()->GetGrenades());
 			}
 		}
 	}

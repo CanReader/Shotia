@@ -19,6 +19,7 @@ public:
 	void SetHUDAmmo(int32 WeaponAmmo);
 	void SetHUDMagAmmo(int32 WeaponAmmo);
 	void SetHUDMatchCountDown(float CountDownTime);
+	void SetHUDGrenadeCount(int32 Grenades);
 
 	void SetHUDWarmupCountdown(float CountDownTime);
 
@@ -86,6 +87,7 @@ private:
 	float HUDMaxHealth;
 	float HUDScore;
 	int32 HUDDeath;
+	int32 HUGGrenade;
 	
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)

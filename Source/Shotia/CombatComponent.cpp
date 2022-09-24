@@ -25,6 +25,8 @@ void UCombatComponent::BeginPlay()
 
 	if(Player && Player->HasAuthority())
 	InitializeMag();
+
+	Grenades = MaxGrenades;
 }
 
 
@@ -49,6 +51,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, IsAiming);
 	DOREPLIFETIME(UCombatComponent, CState);
+	DOREPLIFETIME(UCombatComponent, Grenades)
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 }
 
@@ -305,6 +308,23 @@ int32 UCombatComponent::ReloadAmount()
 	return 0;
 }
 
+void UCombatComponent::UpdateGrenades()
+{
+	Debug("Debug1");	
+	if (Player)
+	{
+		Debug("Debug2");
+		if(Player->Controller)
+		Controller = Controller == nullptr ? Cast<AShoqianPlayerController>(Player->Controller) : Controller;
+		
+		if (Controller)
+		{
+			Debug("Debug3");
+		Controller->SetHUDGrenadeCount(Grenades);
+		}
+	}
+}
+
 void UCombatComponent::OnRep_CombatState()
 {
 	switch (CState)
@@ -428,6 +448,12 @@ void UCombatComponent::OnRep_CarriedAmmo()
 	}
 }
 
+void UCombatComponent::OnRep_Grenades()
+{
+	Debug("Update grenades");
+	UpdateGrenades();
+}
+
 void UCombatComponent::SetAim(bool Isaiming)
 {
 	if (Player == nullptr || EquippedWeapon == nullptr) return;
@@ -450,7 +476,8 @@ void UCombatComponent::SetFire(bool IsPressed)
 
 void UCombatComponent::ThrowGrenade()
 {
-	if (CState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr) return;
+	Debug(FString::FromInt(Grenades));
+	if (CState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr || Grenades == 0) return;
 
 	CState = ECombatState::ECS_Throwing;
 	if (Player)
@@ -462,15 +489,11 @@ void UCombatComponent::ThrowGrenade()
 
 		if (!Player->HasAuthority())
 			ServerThrowGrenade();
+
+		if(Player->HasAuthority())
+			Grenades = FMath::Clamp(Grenades - 1 , 0, MaxGrenades);
 	}
 
-}
-
-void UCombatComponent::LaunchGrenade()
-{
-	Player->GetGrenadeMesh()->SetVisibility(false);
-	if(Player && Player->IsLocallyControlled())
-	ServerLaunchGrenade(HitPoint);
 }
 
 void UCombatComponent::ServerThrowGrenade_Implementation()
@@ -482,7 +505,16 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 		AttachItemByHand(EquippedWeapon, true);
 
 		Player->GetGrenadeMesh()->SetVisibility(true);
+
+		Grenades = FMath::Clamp(Grenades - 1 , 0, MaxGrenades);
 	}
+}
+
+void UCombatComponent::LaunchGrenade()
+{
+	Player->GetGrenadeMesh()->SetVisibility(false);
+	if(Player && Player->IsLocallyControlled())
+	ServerLaunchGrenade(HitPoint);
 }
 
 void UCombatComponent::FinishThrowing()
@@ -510,8 +542,6 @@ void UCombatComponent::AttachItemByHand(AActor* Item,bool bIsLeft)
 void UCombatComponent::Fire()
 {
 	if (!CanFire())return;
-
-	Debug(HitPoint.ToString());
 
 	ServerFire(HitPoint);
 	if (EquippedWeapon)

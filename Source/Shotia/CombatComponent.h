@@ -62,6 +62,8 @@ public:
 	UFUNCTION(BlueprintCallable)
     int32 ReloadAmount();
 
+	void UpdateGrenades();
+
 	void UpdateAmmoValues();
 
 	void UpdateShotgunAmmo();
@@ -94,8 +96,10 @@ private:
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
 
-	void SetAim(bool IsAiming);
+	UFUNCTION()
+	void OnRep_Grenades();
 
+	void SetAim(bool IsAiming);
 
 	void Fire();
 
@@ -133,6 +137,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingGrenedeLauncher = 3;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+	int32 Grenades = 0;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 MaxGrenades = 4;
 
 	//Carries ammo for the current weapon
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_CarriedAmmo)
@@ -174,4 +184,5 @@ private:
 	
 public:
 	FORCEINLINE AWeaponClass* GetWeapon() { return EquippedWeapon ? EquippedWeapon : nullptr; }
+	FORCEINLINE uint32 GetGrenades() { return Grenades; }
 };

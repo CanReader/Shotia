@@ -34,7 +34,7 @@ void AShoqianPlayerState::OnRep_Score()
 
 void AShoqianPlayerState::IncreaseKillBy(int Amount)
 {
-	SetScore(Score + Amount);
+	SetScore(GetScore() + Amount);
 
 	Character = Character == nullptr ? Cast<ACharacterController>(GetPawn()) : Character;
 

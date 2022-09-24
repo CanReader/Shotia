@@ -46,6 +46,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* MatchCountText;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* GrenadeCountText;
+
 	FORCEINLINE void SetHealthBar(float NewValue) { HealthBar->Percent = NewValue; }
 
 	FORCEINLINE void SetHealthText(FString NewValue) { HealthText->SetText(FText::FromString(NewValue));}
