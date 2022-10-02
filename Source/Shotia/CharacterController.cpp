@@ -7,7 +7,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "ShotiaGameMode.h"
 #include "ShoqianPlayerState.h"
-
+#include "BuffComponent.h"
 
 ACharacterController::ACharacterController()
 {
@@ -32,6 +32,9 @@ ACharacterController::ACharacterController()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
 	Combat->SetIsReplicated(true);
+
+	BuffComp = CreateDefaultSubobject<UBuffComponent>(TEXT("Buff Component"));
+	BuffComp->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
@@ -74,6 +77,13 @@ void ACharacterController::BeginPlay()
 	{
 		Combat->SetIsReplicated(true);
 		Combat->Player = this;
+	}
+
+	if (BuffComp)
+	{
+		BuffComp->Character = this;
+		BuffComp->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
+		BuffComp->SetInitialJump(GetCharacterMovement()->JumpZVelocity);
 	}
 	
 	GrenadeMesh->SetVisibility(false);
@@ -146,6 +156,12 @@ void ACharacterController::PostInitializeComponents()
 
 	if (Combat)
 		Combat->Player = this;
+
+	if (BuffComp)
+	{
+		BuffComp->Character = this;
+		BuffComp->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
+	}
 }
 
 void ACharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -187,9 +203,10 @@ void ACharacterController::OnRep_OverlappingWeapon(AWeaponClass* LastWeapon)
 		LastWeapon->ShowPickWidget(false);
 }
 
-void ACharacterController::OnRep_HealthChanged()
+void ACharacterController::OnRep_HealthChanged(float LastHealth)
 {
 	UpdateHUD();
+	if(Health < LastHealth)
 	PlayHitReact();
 
 }

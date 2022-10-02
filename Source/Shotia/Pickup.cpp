@@ -1,6 +1,9 @@
 #include "Shotia/Pickup.h"
 #include "Kismet/GameplayStatics.h"
 #include "WeaponTypes.h"
+#include "Kismet/GameplayStatics.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 APickup::APickup()
 {
@@ -11,28 +14,26 @@ APickup::APickup()
 
 	OverlapSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Overlap Sphere"));
 	OverlapSphere->SetupAttachment(RootComponent);
+	OverlapSphere->SetSphereRadius(110.f);
+
+	//OverlapSphere's Collision code
+
 	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	OverlapSphere->SetCollisionResponseToChannel(ECC_Pawn,ECR_Overlap);
-	OverlapSphere->SetSphereRadius(250.f);
+	OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	//
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
 	Mesh->SetupAttachment(OverlapSphere);
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	
 }
 
 void APickup::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(HasAuthority())
-	OverlapSphere->OnComponentBeginOverlap.AddDynamic(this,&APickup::OnSphereOverlapEnter);
-
-	if(HasAuthority())
-	OverlapSphere->OnComponentEndOverlap.AddDynamic(this,&APickup::OnSphereOverlapLeave);
-
+	if (HasAuthority())
+		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
 
 	Mesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	Mesh->MarkRenderStateDirty();
@@ -48,22 +49,16 @@ void APickup::Destroyed()
 {
 	Super::Destroyed();
 
+	if (PickupEffect)
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PickupEffect, GetActorLocation(), GetActorRotation());
+
 	if (PickupSound)
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(),PickupSound,GetActorLocation());
 
 		
 }
 
-void APickup::OnSphereOverlapEnter(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Debug("Anan enter");
-}
 
-void APickup::OnSphereOverlapLeave(UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComponent,
-	int32 OtherBodyIndex)
-{
-	Debug("Anan leave");
 }
-

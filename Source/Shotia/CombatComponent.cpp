@@ -170,6 +170,19 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 }
 
+void UCombatComponent::AddPickupAmmo(EWeaponType Type, int32 Ammo)
+{
+	if (CarriedAmmoMap.Contains(Type))
+	{
+		CarriedAmmoMap[Type] += Ammo;
+
+		UpdateAmmoValues();
+	}
+
+	if (EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == Type)
+		Reload();
+}
+
 void UCombatComponent::ShotgunShellReload()
 {
 	if(Player && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)

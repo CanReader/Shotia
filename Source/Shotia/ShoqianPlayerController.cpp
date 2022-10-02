@@ -193,6 +193,7 @@ void AShoqianPlayerController::PollInit()
 				SetHUDKills(HUDScore);
 				SetHUDDeaths(HUDDeath);
 				ACharacterController* player = Cast<ACharacterController>(GetPawn());
+				if(player != nullptr)
 				SetHUDGrenadeCount(player->GetCombat()->GetGrenades());
 			}
 		}

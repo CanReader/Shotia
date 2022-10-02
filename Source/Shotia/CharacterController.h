@@ -17,6 +17,7 @@
 #include "Sound/SoundCue.h"
 #include "CombatState.h"
 #include "GrenadeProjectile.h"
+#include "BuffComponent.h"
 
 #include "CharacterController.generated.h"
 
@@ -65,7 +66,7 @@ private:
 	void OnRep_OverlappingWeapon(AWeaponClass* LastWeapon);
 	
 	UFUNCTION()
-	void OnRep_HealthChanged();
+	void OnRep_HealthChanged(float LastHealth);
 
 	UFUNCTION(Server, Reliable)
 	void ServerInterractKeyPressed();
@@ -204,6 +205,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	class UCombatComponent* Combat;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	UBuffComponent* BuffComp;
+
 	//Functions
 	void SetOverlappedWeapon(AWeaponClass* Weapon);
 
@@ -255,6 +259,8 @@ public:
 	FORCEINLINE void SetFOV(float NewValue) { FollowCamera->SetFieldOfView(NewValue); }
 	FORCEINLINE bool GetProxyRotateRootBone() { return bRotateRootBone; }
 	FORCEINLINE float GetHealth() { return Health; }
+	FORCEINLINE void SetHealth(float NewValue) { Health = NewValue; }
 	FORCEINLINE float GetMaxHealth() { return MaxHealth; }
 	FORCEINLINE UStaticMeshComponent* GetGrenadeMesh() { return GrenadeMesh; }
+	FORCEINLINE UBuffComponent* GetBuff() { return BuffComp; }
 };

@@ -8,6 +8,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "CharacterController.h"
 #include "Sound/SoundCue.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Pickup.generated.h"
 
 UCLASS()
@@ -21,24 +23,31 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere)
+		UNiagaraComponent* PickupEffectComp;
+
+	UPROPERTY(EditAnywhere)
+		UNiagaraSystem* PickupEffect;
+
 public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void Destroyed() override;
 
-	virtual void OnSphereOverlapEnter(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	virtual void OnSphereOverlapLeave(UPrimitiveComponent* OverlappedComponent,
+	UFUNCTION()
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 		AActor* OtherActor,
-		UPrimitiveComponent* OtherComponent,
-		int32 OtherBodyIndex);
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	USphereComponent* OverlapSphere;
 
 private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Mesh;
-
-	UPROPERTY(VisibleAnywhere)
-	USphereComponent* OverlapSphere;
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* PickupSound;

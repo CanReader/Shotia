@@ -36,6 +36,9 @@ public:
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 	
 	UFUNCTION(BlueprintCallable)
+	void AddPickupAmmo(EWeaponType Type, int32 Ammo);
+
+	UFUNCTION(BlueprintCallable)
 	void ShotgunShellReload();
 
 	void Reload();
