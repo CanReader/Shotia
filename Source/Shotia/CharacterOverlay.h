@@ -29,6 +29,9 @@ public:
 	UTextBlock* HealthText;
 
 	UPROPERTY(meta = (BindWidget))
+	UProgressBar* ArmorBar;
+
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Kills;
 
 	UPROPERTY(meta = (BindWidget))

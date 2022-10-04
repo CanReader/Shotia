@@ -53,10 +53,18 @@ void UBuffComponent::JumpBoost(float BoostPower, float Duration)
 	MulticastJump(BoostPower);
 }
 
+void UBuffComponent::Armor(float ArmorAmount, float ArmoringTime)
+{
+	if(Character == nullptr) return;
+
+	bIsArmoring = true;	
+	ArmorLoadRate = ArmorAmount / ArmoringTime;
+	ArmorAmountLeft += ArmorAmount;
+}
+
 void UBuffComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -64,6 +72,8 @@ void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	RaiseHealth(DeltaTime);
+	RaiseArmor(DeltaTime);
+
 }
 
 void UBuffComponent::RaiseHealth(float DeltaTime)
@@ -77,10 +87,31 @@ void UBuffComponent::RaiseHealth(float DeltaTime)
 
 	AmountToHealth -= HealAmountThisFrame;
 	
-	if (Character->GetHealth() >= Character->GetMaxHealth())
+	if (Character->GetHealth() >= Character->GetMaxHealth() || AmountToHealth <= 0)
 	{
 		bIsHealing = false;
 		AmountToHealth = 0.f;
+	}
+
+}
+
+void UBuffComponent::RaiseArmor(float DeltaTime)
+{
+	if (!bIsArmoring || Character == nullptr || Character->GetIsEliminated()) return;
+
+	const float ArmorAmountThisFrame = ArmorLoadRate * DeltaTime;
+
+	Character->SetArmor(FMath::Clamp(Character->GetArmor() + ArmorAmountThisFrame, 0, Character->GetMaxArmor()));
+	Character->UpdateHUD();
+
+	ArmorAmountLeft -= ArmorAmountThisFrame;
+
+	Debug(FString::SanitizeFloat(ArmorAmountLeft));
+
+	if (Character->GetArmor() >= Character->GetMaxArmor() || ArmorAmountLeft <= 0)
+	{
+		bIsArmoring = false;
+		ArmorAmountLeft = 0;
 	}
 
 }
@@ -104,6 +135,7 @@ void UBuffComponent::ResetJump()
 	MulticastJump(InitialJumpVelocity);
 
 }
+
 
 void UBuffComponent::MulticastAccelerate_Implementation(float BuffSpeed, float BuffSpeedCrouched)
 {

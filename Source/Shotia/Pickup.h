@@ -12,6 +12,11 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Pickup.generated.h"
 
+#define InitializeParticlePickup() PickupEffectComp =CreateDefaultSubobject<UNiagaraComponent>(TEXT("Pickup Effect"));\
+PickupEffectComp->SetupAttachment(RootComponent);\
+OverlapSphere->SetRelativeLocation(FVector(0, 0, 30));\
+OverlapSphere->SetSphereRadius(60);
+
 UCLASS()
 class SHOTIA_API APickup : public AActor
 {

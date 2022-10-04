@@ -14,6 +14,7 @@ class SHOTIA_API AShoqianPlayerController : public APlayerController
 
 public:
 	void SetHUDHealth(float Health, float MaxHealth);
+	void SetHUDArmor(float Armor, float MaxArmor);
 	void SetHUDKills(int Kills);
 	void SetHUDDeaths(int Deaths);
 	void SetHUDAmmo(int32 WeaponAmmo);
@@ -85,6 +86,8 @@ private:
 
 	float HUDHealth;
 	float HUDMaxHealth;
+	float HUDArmor;
+	float HUDMaxArmor;
 	float HUDScore;
 	int32 HUDDeath;
 	int32 HUGGrenade;

@@ -28,6 +28,30 @@ void AShoqianPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	}
 }
 
+
+void AShoqianPlayerController::SetHUDArmor(float Armor, float MaxArmor)
+{
+	HUD = HUD == nullptr ? Cast<AShoqianHUD>(GetHUD()) : HUD;
+
+
+	if (HUD != nullptr)
+	{
+		const float ArmorPercent = Armor / MaxArmor;
+		
+
+		if (HUD->Overlay != nullptr && HUD->Overlay->ArmorBar != nullptr)
+		{
+			HUD->Overlay->ArmorBar->SetPercent(ArmorPercent);
+		}
+		else
+		{
+			bInitializeCharacterOverlay = true;
+			this->HUDArmor = Armor;
+			this->HUDMaxArmor = MaxArmor;
+		}
+	}
+}
+
 void AShoqianPlayerController::SetHUDKills(int Kills)
 {
 	HUD = HUD == nullptr ? Cast<AShoqianHUD>(GetHUD()) : HUD;
@@ -148,14 +172,13 @@ void AShoqianPlayerController::OnPossess(APawn* InPawn)
 	if (Shoqian != nullptr)
 	{
 		SetHUDHealth(Shoqian->GetMaxHealth(), Shoqian->GetMaxHealth());
+		SetHUDArmor(Shoqian->GetMaxArmor(), Shoqian->GetMaxArmor());
 	}
 }
 
 void AShoqianPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//ServerCheckMatchState();
 
 	HUD = Cast<AShoqianHUD>(GetHUD());
 
@@ -190,6 +213,7 @@ void AShoqianPlayerController::PollInit()
 			if (Overlay)
 			{
 				SetHUDHealth(HUDHealth,HUDMaxHealth);
+				SetHUDArmor(HUDArmor,HUDMaxArmor);
 				SetHUDKills(HUDScore);
 				SetHUDDeaths(HUDDeath);
 				ACharacterController* player = Cast<ACharacterController>(GetPawn());

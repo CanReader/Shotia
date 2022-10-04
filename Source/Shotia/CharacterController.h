@@ -68,6 +68,9 @@ private:
 	UFUNCTION()
 	void OnRep_HealthChanged(float LastHealth);
 
+	UFUNCTION()
+	void OnRep_ArmorChanged();
+
 	UFUNCTION(Server, Reliable)
 	void ServerInterractKeyPressed();
 
@@ -119,12 +122,17 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 		AWeaponClass* OverlappedWeapon;
 
-	
 	UPROPERTY(EditAnywhere, Category = "Player Stats")
 		float MaxHealth = 100.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+		float MaxArmor = 100.0f;
+
 	UPROPERTY(VisibleAnywhere, Category = "Player Stats", ReplicatedUsing = OnRep_HealthChanged)
 		float Health;
+
+	UPROPERTY(VisibleAnywhere, Category = "Player Stats", ReplicatedUsing = OnRep_ArmorChanged)
+		float Armor;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	UAnimMontage* ThrowGrenadeMontage;
@@ -259,8 +267,11 @@ public:
 	FORCEINLINE void SetFOV(float NewValue) { FollowCamera->SetFieldOfView(NewValue); }
 	FORCEINLINE bool GetProxyRotateRootBone() { return bRotateRootBone; }
 	FORCEINLINE float GetHealth() { return Health; }
+	FORCEINLINE float GetArmor() { return Armor; }
 	FORCEINLINE void SetHealth(float NewValue) { Health = NewValue; }
+	FORCEINLINE void SetArmor(float NewValue) {  Armor = NewValue; }
 	FORCEINLINE float GetMaxHealth() { return MaxHealth; }
+	FORCEINLINE float GetMaxArmor() { return MaxArmor; }
 	FORCEINLINE UStaticMeshComponent* GetGrenadeMesh() { return GrenadeMesh; }
 	FORCEINLINE UBuffComponent* GetBuff() { return BuffComp; }
 };

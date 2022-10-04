@@ -48,9 +48,7 @@ ACharacterController::ACharacterController()
 	SprintSpeed = 1;
 	
 	TurnDirection = ETurningInPlace::ETIP_NotTurning;
-
-	Health = MaxHealth;
-
+	
 	GrenadeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Grenade Mesh"));
 	GrenadeMesh->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	GrenadeMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -89,6 +87,14 @@ void ACharacterController::BeginPlay()
 	GrenadeMesh->SetVisibility(false);
 
 	PollInit();
+
+	Health = MaxHealth;
+
+	Armor = 0;
+
+	UpdateHUD();
+
+	BuffComp->Armor(0,1);
 }
 
 void ACharacterController::Tick(float DeltaTime)
@@ -172,7 +178,8 @@ void ACharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	DOREPLIFETIME(ACharacterController, bDisableGameplay);
 	DOREPLIFETIME(ACharacterController, AimSpeed);
 	DOREPLIFETIME(ACharacterController, SprintSpeed);
-	DOREPLIFETIME(ACharacterController, Health)
+	DOREPLIFETIME(ACharacterController, Armor);
+	DOREPLIFETIME(ACharacterController, Health);
 }
 
 void ACharacterController::OnRep_ReplicatedMovement()
@@ -211,9 +218,18 @@ void ACharacterController::OnRep_HealthChanged(float LastHealth)
 
 }
 
+void ACharacterController::OnRep_ArmorChanged()
+{
+	UpdateHUD();
+}
+
+
 void ACharacterController::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	Health = FMath::Clamp(Health - Damage,0,MaxHealth);
+	if (Armor > 0)
+		Armor = FMath::Clamp(Armor - Damage, 0, MaxArmor);
+	else
+		Health = FMath::Clamp(Health - Damage,0,MaxHealth);
 
 	UpdateHUD();
 	PlayHitReact();
@@ -230,7 +246,7 @@ void ACharacterController::ReceiveDamage(AActor* DamagedActor, float Damage, con
 
 			if (PC)
 			{
-			gm->EliminatePlayer(this, PC, EPC);
+				gm->EliminatePlayer(this, PC, EPC);
 			}
 		}
 	}
@@ -806,5 +822,10 @@ void ACharacterController::UpdateHUD()
 	PlayerController = PlayerController == nullptr ? Cast<AShoqianPlayerController>(Controller) : PlayerController;
 
 	if (PlayerController)
+	{
 		PlayerController->SetHUDHealth(Health, MaxHealth);
+		PlayerController->SetHUDArmor(Armor, MaxArmor);
+	}
+	else
+		UE_LOG(LogTemp,Warning,TEXT("No player controller"));
 }

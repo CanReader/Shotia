@@ -323,16 +323,13 @@ int32 UCombatComponent::ReloadAmount()
 
 void UCombatComponent::UpdateGrenades()
 {
-	Debug("Debug1");	
 	if (Player)
 	{
-		Debug("Debug2");
 		if(Player->Controller)
 		Controller = Controller == nullptr ? Cast<AShoqianPlayerController>(Player->Controller) : Controller;
 		
 		if (Controller)
 		{
-			Debug("Debug3");
 		Controller->SetHUDGrenadeCount(Grenades);
 		}
 	}
@@ -463,7 +460,6 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 void UCombatComponent::OnRep_Grenades()
 {
-	Debug("Update grenades");
 	UpdateGrenades();
 }
 

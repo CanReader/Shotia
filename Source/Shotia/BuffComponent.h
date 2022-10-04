@@ -22,6 +22,7 @@ public:
 	void Heal(float HealAmount,float HealingTime);
 	void Accelerate(float BuffSpeed, float BuffCrouchSpeed, float Duration);
 	void JumpBoost(float BoostPower, float Duration);
+	void Armor(float ArmorAmount, float ArmoringTime);
 
 protected:
 	virtual void BeginPlay() override;
@@ -68,4 +69,12 @@ private:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastJump(float Boost);
+
+	/*
+	// Armor buff
+	*/
+	void RaiseArmor(float DeltaTime);
+	bool bIsArmoring = false;
+	float ArmorAmountLeft;
+	float ArmorLoadRate;
 };
