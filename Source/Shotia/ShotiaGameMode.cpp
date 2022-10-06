@@ -87,7 +87,12 @@ void AShotiaGameMode::EliminatePlayer(ACharacterController* EliminatedPlayer, AS
 		VictimState->IncreaseDeathBy(1);
 
 	if (EliminatedPlayer)
+	{
+		if (EliminatedPlayer->GetWeapon() && EliminatedPlayer->GetWeapon()->DefaultWeapon)
+			EliminatedPlayer->GetWeapon()->Destroy();
+
 		EliminatedPlayer->Eliminate();
+	}
 }
 
 void AShotiaGameMode::RequestRespawn(ACharacter* EliminatedCharacter, AController* EliminatedController)

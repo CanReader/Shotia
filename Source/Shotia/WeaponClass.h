@@ -90,6 +90,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	USoundCue* EquipSound;
 
+	UPROPERTY(BlueprintReadOnly)
+	bool DefaultWeapon;
+	
+	UPROPERTY(BlueprintReadOnly)
+	bool SecondaryWeapon;
+
 	//Functions
 	void EnableCustomDepth(bool bEnabled);
 

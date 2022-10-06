@@ -33,6 +33,9 @@ public:
 
 	void EquipWeapon(AWeaponClass* Weapon);
 
+	void EquipPrimaryWeapon(AWeaponClass* Weapon);
+	void EquipSecondaryWeapon(AWeaponClass* Weapon);
+
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 	
 	UFUNCTION(BlueprintCallable)
@@ -79,6 +82,19 @@ public:
 
 	void AttachItemByHand(AActor* Item,bool bIsLeft);
 
+	void AttachItemToBackpack(AActor* Item);
+
+
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+
+
 protected:
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitLoc);
@@ -89,12 +105,30 @@ protected:
 	void SetHUDCrosshairs(float DeltaTime);
 
 	FVector HitPoint;
+	
+
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+
 
 private:
-	void InitializeMag();
+	/*
+	//
+	// Functions
+	//
+	*/
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
 
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
@@ -102,20 +136,37 @@ private:
 	UFUNCTION()
 	void OnRep_Grenades();
 
-	void SetAim(bool IsAiming);
-
-	void Fire();
-
+	UFUNCTION()
+	void OnRep_CombatState();
+	
 	UFUNCTION(Server, Reliable)
 	void ServerSetAim(bool NewValue);
 	
-	ACharacterController* Player;
-	AShoqianPlayerController* Controller;
+	void PlayEquipWeaponSound(AWeaponClass* Weapon);
 
-	AShoqianHUD* HUD;
+	void DropEquippedWeapon();
+
+	void UpdateCarriedAmmo(AWeaponClass* Weapon);
+
+	void SetAim(bool IsAiming);
+	
+	void Fire();
+
+	void InitializeMag();
+
+	void InterpFOV(float DeltaTime);
+
+	/*
+	//
+	// Properties
+	//
+	*/
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeaponClass* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeaponClass* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 	bool IsAiming;
@@ -156,6 +207,17 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CState = ECombatState::ECS_Unoccupied;
 
+	/*
+	//
+	// Variables
+	//
+	*/
+
+	ACharacterController* Player;
+	AShoqianPlayerController* Controller;
+
+	AShoqianHUD* HUD;
+
 	bool bFirePressed;
 
 	bool bCanFire = true;
@@ -177,15 +239,15 @@ private:
 	
 	void FireTimerStart();
 	void FireTimerFinish();
-
-	UFUNCTION()
-	void OnRep_CombatState();
-
-	void InterpFOV(float DeltaTime);
-
-	bool CanFire();
 	
+	/*
+	//
+	// Inline functions
+	//
+	*/
+
 public:
 	FORCEINLINE AWeaponClass* GetWeapon() { return EquippedWeapon ? EquippedWeapon : nullptr; }
 	FORCEINLINE uint32 GetGrenades() { return Grenades; }
+	FORCEINLINE bool CanFire() { return EquippedWeapon == nullptr ? false : !EquippedWeapon->IsEmpty() && bCanFire && CState == ECombatState::ECS_Unoccupied; }
 };

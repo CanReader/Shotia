@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "GameFramework/SpringArmComponent.h"
@@ -102,7 +100,10 @@ private:
 
 	virtual void OnRespawn();
 
+	void DefaultWeaponTimerFinished();
+
 	//Properties
+	
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AGrenadeProjectile> GrenadeClass;
@@ -195,28 +196,37 @@ private:
 
 	ETurningInPlace TurnDirection;
 	
+	FTimerHandle DefaultWeaponTimer;
+
 	bool IsEliminated;
 
 	FTimerHandle ElimTimer;
+
 
 	UPROPERTY(EditDefaultsOnly)
 	float ElimDelay = 3.f;
 
 public:
 	//Properties
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeaponClass> DefaultWeaponClass;
+
 	UPROPERTY(Replicated, Category = "Character Movement", EditAnywhere, BlueprintReadWrite)
 	float AimSpeed;
 
 	UPROPERTY(Replicated, Category = "Character Movement", EditAnywhere, BlueprintReadWrite)
 	float SprintSpeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	class UCombatComponent* Combat;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UBuffComponent* BuffComp;
 
 	//Functions
+
+	void SpawnDefaultWeapon();
+
 	void SetOverlappedWeapon(AWeaponClass* Weapon);
 
 	UFUNCTION(BlueprintCallable)
@@ -238,6 +248,8 @@ public:
 
 	UFUNCTION()
 		void UpdateHUD();
+	
+	void UpdateAmmoHUD();
 
 	UFUNCTION()
 		void ReceiveDamage(AActor* DamagedActor, float Damage,const UDamageType* DamageType,AController* InstigatedBy, AActor* DamageCauser);

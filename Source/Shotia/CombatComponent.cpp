@@ -27,7 +27,7 @@ void UCombatComponent::BeginPlay()
 	InitializeMag();
 
 	Grenades = MaxGrenades;
-}
+}	
 
 
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -38,8 +38,13 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 	FHitResult result;
 	TraceUnderCrosshairs(result);
-
+	
 	HitPoint = result.ImpactPoint;
+
+	if (EquippedWeapon)
+	{
+		DrawDebugSphere(GetWorld(), HitPoint, 30.f, 10, FColor::Red);
+	}
 
 	InterpFOV(DeltaTime);
 }
@@ -51,7 +56,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, IsAiming);
 	DOREPLIFETIME(UCombatComponent, CState);
-	DOREPLIFETIME(UCombatComponent, Grenades)
+	DOREPLIFETIME(UCombatComponent, Grenades);
+	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 }
 
@@ -60,43 +66,46 @@ void UCombatComponent::EquipWeapon(AWeaponClass* Weapon)
 {
 	if (Player != nullptr && Weapon != nullptr)
 	{
-		if (EquippedWeapon)
-			EquippedWeapon->Drop();
-		
-		this->EquippedWeapon = Weapon;
-		this->EquippedWeapon->SetWeaponState(UWeaponState::EWS_Equipped);
-
-		if (Weapon->GetMaxAmmo() <= 0)
-			Debug("Max ammo 0 olamaz gerizekali")
-			
-		AttachItemByHand(Weapon,false);
-
-		this->EquippedWeapon->SetOwner(Player);
-		this->EquippedWeapon->ShowPickWidget(false);
-		
-		if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
-		{
-			CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];	
-		}
-
-		Controller = Controller == nullptr ? Cast<AShoqianPlayerController>(Player->Controller) : Controller;
-
-		if (Controller)
-		{
-			Controller->SetHUDAmmo(EquippedWeapon->Ammo);
-			Controller->SetHUDMagAmmo(CarriedAmmo);
-		}
+		if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+			EquipSecondaryWeapon(Weapon);
+		else
+			EquipPrimaryWeapon(Weapon);
 
 		this->Player->GetCharacterMovement()->bOrientRotationToMovement = false;
 		this->Player->bUseControllerRotationYaw = true;
-		this->Player->bUseControllerRotationYaw = true;
-		if (EquippedWeapon->EquipSound)
-
-			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound,EquippedWeapon->GetActorLocation());
-
-		if (EquippedWeapon->IsEmpty())
-			Reload();
+		
+		PlayEquipWeaponSound(Weapon);
+		
+		if(Weapon->GetMaxAmmo() <= 0)
+			Debug("Max ammo 0 olamaz gerizekali")
 	}
+
+}
+
+void UCombatComponent::EquipPrimaryWeapon(AWeaponClass* Weapon)
+{
+	DropEquippedWeapon();
+
+	this->EquippedWeapon = Weapon;
+	this->EquippedWeapon->SetWeaponState(UWeaponState::EWS_Equipped);
+	
+	AttachItemByHand(Weapon, false);
+
+	this->EquippedWeapon->SetOwner(Player);
+	this->EquippedWeapon->ShowPickWidget(false);
+
+	UpdateCarriedAmmo(Weapon);
+
+	if (EquippedWeapon->IsEmpty())
+		Reload();
+}
+
+void UCombatComponent::EquipSecondaryWeapon(AWeaponClass* Weapon)
+{
+	SecondaryWeapon = Weapon;
+	SecondaryWeapon->SetWeaponState(UWeaponState::EWS_Equipped);
+	AttachItemToBackpack(Weapon);
+	SecondaryWeapon->SetOwner(Player);
 }
 
 void UCombatComponent::InitializeMag()
@@ -114,17 +123,23 @@ void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Player)
 	{
-		this->EquippedWeapon->SetWeaponState(UWeaponState::EWS_Equipped);
+		EquippedWeapon->SetWeaponState(UWeaponState::EWS_Equipped);
 
-		const USkeletalMeshSocket* WeaponSocket = Player->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-		
-		if (WeaponSocket)
-		{
-			WeaponSocket->AttachActor(EquippedWeapon, Player->GetMesh());
-		}
+		AttachItemByHand(EquippedWeapon,false);
 
 		Player->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Player->bUseControllerRotationYaw = true;
+		PlayEquipWeaponSound(EquippedWeapon);
+	}
+}
+
+void UCombatComponent::OnRep_SecondaryWeapon()
+{
+	if (SecondaryWeapon && Player)
+	{
+		SecondaryWeapon->SetWeaponState(UWeaponState::EWS_Equipped);
+		AttachItemToBackpack(SecondaryWeapon);
+		PlayEquipWeaponSound(SecondaryWeapon);
 	}
 }
 
@@ -192,6 +207,8 @@ void UCombatComponent::ShotgunShellReload()
 void UCombatComponent::Reload()
 {
 	if (EquippedWeapon == nullptr) return;
+
+	Debug(FString::FromInt((int32)CState));
 
 	if(CarriedAmmo > 0 && CState != ECombatState::ECS_Reloading && EquippedWeapon->MaxAmmo != EquippedWeapon->Ammo)
 		ServerReload();
@@ -438,7 +455,8 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 
 void UCombatComponent::OnRep_CarriedAmmo()
 {
-	Controller = Controller == nullptr ? Cast<AShoqianPlayerController>(Player->Controller) : Controller;
+	try
+	{
 
 	if (Controller)
 		Controller->SetHUDMagAmmo(CarriedAmmo);
@@ -447,7 +465,7 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 	if (bJumpToEnd)
 	{
-		//JumpToShotgunEnd
+		//Why you don't work!!
 		if (EquippedWeapon->Ammo == EquippedWeapon->MaxAmmo || CarriedAmmo == 0)
 		{
 			UAnimInstance* Instance = Player->GetMesh()->GetAnimInstance();
@@ -456,11 +474,44 @@ void UCombatComponent::OnRep_CarriedAmmo()
 				Instance->Montage_JumpToSection(FName("ShotgunEnd"));
 		}
 	}
+	}
+	catch (const std::exception&)
+	{
+		return;
+	}
 }
 
 void UCombatComponent::OnRep_Grenades()
 {
 	UpdateGrenades();
+}
+
+void UCombatComponent::PlayEquipWeaponSound(AWeaponClass* Weapon)
+{
+	if (Player && Weapon && Weapon->EquipSound)
+		UGameplayStatics::PlaySoundAtLocation(this,Weapon->EquipSound,Player->GetActorLocation());
+}
+
+void UCombatComponent::DropEquippedWeapon()
+{
+	if (EquippedWeapon)
+		EquippedWeapon->Drop();
+}
+
+void UCombatComponent::UpdateCarriedAmmo(AWeaponClass* Weapon)
+{
+	if (CarriedAmmoMap.Contains(Weapon->GetWeaponType()))
+	{
+		CarriedAmmo = CarriedAmmoMap[Weapon->GetWeaponType()];
+	}
+
+	Controller = Controller == nullptr ? Cast<AShoqianPlayerController>(Player->Controller) : Controller;
+
+	if (Controller)
+	{
+		Controller->SetHUDAmmo(EquippedWeapon->Ammo);
+		Controller->SetHUDMagAmmo(CarriedAmmo);
+	}
 }
 
 void UCombatComponent::SetAim(bool Isaiming)
@@ -548,6 +599,14 @@ void UCombatComponent::AttachItemByHand(AActor* Item,bool bIsLeft)
 	}
 }
 
+void UCombatComponent::AttachItemToBackpack(AActor* Item)
+{
+	if (Player == nullptr || Player->GetMesh() == nullptr || Item == nullptr) return;
+	const USkeletalMeshSocket* BackpackSocket = Player->GetMesh()->GetSocketByName(FName("BackpackSocket"));
+	if (BackpackSocket)
+		BackpackSocket->AttachActor(Item,Player->GetMesh());
+}
+
 void UCombatComponent::Fire()
 {
 	if (!CanFire())return;
@@ -601,12 +660,6 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 	{
 		Player->SetFOV(CurrentFov);
 	}
-}
-
-bool UCombatComponent::CanFire()
-{
-	if (EquippedWeapon == nullptr) return false;
-	return !EquippedWeapon->IsEmpty() && bCanFire && CState == ECombatState::ECS_Unoccupied;
 }
 
 void UCombatComponent::ServerSetAim_Implementation(bool NewValue)

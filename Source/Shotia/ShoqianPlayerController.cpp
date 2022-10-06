@@ -212,13 +212,21 @@ void AShoqianPlayerController::PollInit()
 			
 			if (Overlay)
 			{
+				try
+				{
 				SetHUDHealth(HUDHealth,HUDMaxHealth);
 				SetHUDArmor(HUDArmor,HUDMaxArmor);
 				SetHUDKills(HUDScore);
 				SetHUDDeaths(HUDDeath);
 				ACharacterController* player = Cast<ACharacterController>(GetPawn());
-				if(player != nullptr)
+				if(player != nullptr && player->GetCombat())
 				SetHUDGrenadeCount(player->GetCombat()->GetGrenades());
+				}
+				catch (const std::exception&)
+				{
+					Debug("Exception in PollInit!")
+					return;
+				}
 			}
 		}
 	}

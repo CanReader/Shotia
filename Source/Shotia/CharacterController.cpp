@@ -95,6 +95,8 @@ void ACharacterController::BeginPlay()
 	UpdateHUD();
 
 	BuffComp->Armor(0,1);
+
+	GetWorld()->GetTimerManager().SetTimer(DefaultWeaponTimer,this,&ACharacterController::DefaultWeaponTimerFinished,0.5);
 }
 
 void ACharacterController::Tick(float DeltaTime)
@@ -403,7 +405,6 @@ void ACharacterController::InterractKeyPressed()
 	if (bDisableGameplay) return;
 	if (Combat)
 	{
-			Combat->EquipWeapon(OverlappedWeapon);
 			ServerInterractKeyPressed();
 	}
 }
@@ -423,6 +424,8 @@ void ACharacterController::ReloadPressed()
 
 	if (Combat)
 		Combat->Reload();
+	else
+		Debug("Fuck you ananin ami Unreal Engine 5");
 }
 
 void ACharacterController::AimButtonPressed()
@@ -649,6 +652,31 @@ void ACharacterController::OnRespawn()
 	Health = MaxHealth;
 }
 
+void ACharacterController::DefaultWeaponTimerFinished()
+{
+	if(HasAuthority())
+	SpawnDefaultWeapon();
+	UpdateAmmoHUD();
+}
+
+
+void ACharacterController::SpawnDefaultWeapon()
+{
+	AShotiaGameMode* gm = Cast<AShotiaGameMode>(UGameplayStatics::GetGameMode(this));
+
+	if (DefaultWeaponClass)
+	{
+		AWeaponClass* StartingWeapon = GetWorld()->SpawnActor<AWeaponClass>(DefaultWeaponClass,GetActorTransform());
+		StartingWeapon->DefaultWeapon = true;
+
+		if (Combat)
+		{
+			Combat->EquipWeapon(StartingWeapon);
+		}
+		else
+			Debug("No combat :(")
+	}
+}
 
 void ACharacterController::SetOverlappedWeapon(AWeaponClass* Weapon)
 {
@@ -828,4 +856,15 @@ void ACharacterController::UpdateHUD()
 	}
 	else
 		UE_LOG(LogTemp,Warning,TEXT("No player controller"));
+}
+
+void ACharacterController::UpdateAmmoHUD()
+{
+	PlayerController = PlayerController == nullptr ? Cast<AShoqianPlayerController>(Controller) : PlayerController;
+
+	if (PlayerController && Combat && Combat->EquippedWeapon)
+	{
+		PlayerController->SetHUDMagAmmo(Combat->CarriedAmmo);
+		PlayerController->SetHUDAmmo(Combat->EquippedWeapon->GetAmmo());
+	}
 }
