@@ -669,7 +669,7 @@ void ACharacterController::SpawnDefaultWeapon()
 		AWeaponClass* StartingWeapon = GetWorld()->SpawnActor<AWeaponClass>(DefaultWeaponClass,GetActorTransform());
 		StartingWeapon->DefaultWeapon = true;
 
-		if (Combat)
+		if (Combat && Combat->EquippedWeapon == nullptr)
 		{
 			Combat->EquipWeapon(StartingWeapon);
 		}
