@@ -7,6 +7,8 @@ AArmorPickup::AArmorPickup()
 	PickupEffectComp->SetupAttachment(RootComponent);
 
 	OverlapSphere->SetSphereRadius(60.f);
+
+	Type = EPickupType::EPT_Armor;
 }
 
 void AArmorPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
@@ -21,7 +23,9 @@ void AArmorPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
 	ACharacterController* Character = Cast<ACharacterController>(OtherActor);
 
 	if (Character)
+	{
 		Character->BuffComp->Armor(ArmorAmount,LoadTime);
 
 	Destroy();
+	}
 }

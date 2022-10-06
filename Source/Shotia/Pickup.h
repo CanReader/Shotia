@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -16,6 +14,17 @@
 PickupEffectComp->SetupAttachment(RootComponent);\
 OverlapSphere->SetRelativeLocation(FVector(0, 0, 30));\
 OverlapSphere->SetSphereRadius(60);
+
+UENUM(BlueprintType)
+enum class EPickupType : uint8
+{
+	EPT_None UMETA(DisplayName = "NoType"),
+	EPT_Ammo UMETA(DisplayName = "Ammo"),
+	EPT_Speed UMETA(DisplayName = "Speed"),
+	EPT_Jump UMETA(DisplayName = "Jump"),
+	EPT_Armor UMETA(DisplayName = "Armor"),
+	EPT_Health UMETA(DisplayName = "Health")
+};
 
 UCLASS()
 class SHOTIA_API APickup : public AActor
@@ -47,8 +56,12 @@ public:
 		bool bFromSweep,
 		const FHitResult& SweepResult);
 
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USphereComponent* OverlapSphere;
+
+	UPROPERTY(BlueprintReadOnly)
+	EPickupType Type;
 
 private:
 	UPROPERTY(VisibleAnywhere)
@@ -56,4 +69,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* PickupSound;
+
+	FTimerHandle BindOverlapTimer;
+	float BinOverlapTime = 0.25f;
+	void BindOverlapFinished();
 };

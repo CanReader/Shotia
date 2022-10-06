@@ -1,5 +1,6 @@
 #include "Shotia/HealthPickup.h"
 #include "CharacterController.h"
+#include "NiagaraSystem.h"
 
 AHealthPickup::AHealthPickup()
 {
@@ -8,6 +9,8 @@ AHealthPickup::AHealthPickup()
 
 	OverlapSphere->SetSphereRadius(60.f);
 	OverlapSphere->SetRelativeLocation(FVector(0,0,30.f));
+
+	Type = EPickupType::EPT_Health;
 }
 
 void AHealthPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -17,7 +20,9 @@ void AHealthPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	ACharacterController* Character = Cast<ACharacterController>(OtherActor);
 
 	if (Character)
+	{
 		Character->BuffComp->Heal(HealthAmount,HealthTime);
 
 	Destroy();
+	}
 }

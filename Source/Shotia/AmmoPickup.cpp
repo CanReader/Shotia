@@ -2,6 +2,11 @@
 #include "CharacterController.h"
 #include "CombatComponent.h"
 
+AAmmoPickup::AAmmoPickup()
+{
+	Type = EPickupType::EPT_Ammo;
+}
+
 void AAmmoPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Super::OnSphereOverlap(OverlappedComponent,OtherActor,OtherComponent,OtherBodyIndex,bFromSweep,SweepResult);
@@ -9,7 +14,9 @@ void AAmmoPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	ACharacterController* Player = Cast<ACharacterController>(OtherActor);
 
 	if (Player && Player->Combat)
+	{
 		Player->Combat->AddPickupAmmo(WeaponType,AmmoAmount);
 
 	Destroy();
+	}
 }

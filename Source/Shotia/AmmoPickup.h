@@ -10,6 +10,8 @@ class SHOTIA_API AAmmoPickup : public APickup
 {
     GENERATED_BODY()
 public:
+    AAmmoPickup();
+
     virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent,
         AActor* OtherActor,
         UPrimitiveComponent* OtherComponent,

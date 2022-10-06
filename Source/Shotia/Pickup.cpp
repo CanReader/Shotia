@@ -32,12 +32,11 @@ void APickup::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (HasAuthority())
-		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
-
 	Mesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	Mesh->MarkRenderStateDirty();
 	Mesh->SetRenderCustomDepth(true);
+
+	GetWorldTimerManager().SetTimer(BindOverlapTimer,this,&APickup::BindOverlapFinished,BinOverlapTime);
 }
 
 void APickup::Tick(float DeltaTime)
@@ -61,4 +60,10 @@ void APickup::Destroyed()
 void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
+}
+
+void APickup::BindOverlapFinished()
+{
+	if (HasAuthority())
+		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
 }
